@@ -5,6 +5,12 @@ const DEFAULT_SOURCE = {
   menuUrl: "https://juvenes.fi/rata/",
 };
 
+/**
+ * Scrapes menu items from a Juvenes restaurant via Jamix
+ * @param {Object} [source] - Restaurant with name and menuUrl
+ * @returns {Promise<Object[]>} Menu items with id, title, date, source
+ */
+
 export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
   const browser = await puppeteer.launch({ headless: true });
   try {
