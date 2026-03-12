@@ -2,6 +2,11 @@ import express from "express";
 import cors from "cors";
 import { scrapeRestaurant } from "./service/scraper.js";
 
+/**
+ * @fileoverview CampusEats backend API server
+ * @module backend/index
+ */
+
 const app = express();
 const port = process.env.PORT || 3001;
 app.use(express.json());
