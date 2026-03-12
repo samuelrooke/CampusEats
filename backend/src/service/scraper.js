@@ -11,21 +11,23 @@ export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
     const page = await browser.newPage();
     await page.goto(source.menuUrl, { waitUntil: "networkidle2" });
 
+    // Juvenes uses Jamix
+    const jamixLink = await page.evaluate(() => {
+      const link = document.querySelector('a[href*="jamix.cloud"]');
+      return link ? link.href : null;
+    });
+    if (jamixLink) await page.goto(jamixLink, { waitUntil: "networkidle2" });
+
     const meals = await page.evaluate(() => {
-      const skip = /cookie|eväste|consent|suostumus/i;
-      const lines = document.body.innerText.split("\n");
-      return lines
-        .filter(l => l.trim().length > 3 && !skip.test(l))
-        .slice(0, 20);
+      const skip = /cookie|eväste|consent|suostumus|ravintola|lounas|rajaa|maanantai|tiistai|keskiviikko|torstai|perjantai|lauantai|sunnuntai|^\d{1,2}\.\d{1,2}\.\d{4}$/i;
+      return document.body.innerText
+        .split("\n")
+        .map(l => l.trim())
+        .filter(l => l.length > 4 && l.length < 80 && !skip.test(l));
     });
 
     const date = new Date().toISOString().slice(0, 10);
-    return meals.map((title, i) => ({
-      id: i,
-      title: title.trim(),
-      date,
-      source: source.name,
-    }));
+    return meals.map((title, i) => ({ id: i, title, date, source: source.name }));
   } finally {
     await browser.close();
   }
