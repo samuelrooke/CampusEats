@@ -1,8 +1,11 @@
 import express from "express";
+import cors from "cors";
 import { scrapeRestaurant } from "./service/scraper.js";
 
 const app = express();
 const port = process.env.PORT || 3001;
+app.use(express.json());
+app.use(cors());
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
