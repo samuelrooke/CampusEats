@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { scrapeRestaurant } from "./service/scraper.js";
+import { initDatabase } from "./database/init.js";
 
 /**
  * @fileoverview CampusEats backend API server
@@ -8,6 +9,8 @@ import { scrapeRestaurant } from "./service/scraper.js";
  */
 
 const app = express();
+
+await initDatabase();
 const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(cors());
