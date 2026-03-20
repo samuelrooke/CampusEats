@@ -16,19 +16,40 @@ const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(cors());
 
+async function refreshMenus() {
+  const meals = await scrapeRestaurant();
+  await saveMenus(meals, "Ravintola Rata");
+  return meals.length;
+}
+
+async function getOrRefreshMenus() {
+  const menus = await getAllMenus();
+  if (menus.length > 0) return menus;
+
+  await refreshMenus();
+  return await getAllMenus();
+}
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
 app.get("/api/menus", async (req, res) => {
-  const menus = await getAllMenus();
-  res.json(menus);
+  try {
+    const menus = await getOrRefreshMenus();
+    res.json(menus);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to load menus" });
+  }
 });
 
 app.post("/api/menus/refresh", async (req, res) => {
-  const meals = await scrapeRestaurant();
-  await saveMenus(meals, "Ravintola Rata");
-  res.json({ success: true, saved: meals.length });
+  try {
+    const saved = await refreshMenus();
+    res.json({ success: true, saved });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to refresh menus" });
+  }
 });
 
 app.listen(port, () => {

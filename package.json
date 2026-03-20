@@ -4,6 +4,10 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "concurrently \"npm --prefix backend start\" \"npm --prefix frontend/CampusEats run dev\"",
+    "dev": "concurrently \"npm --prefix backend start\" \"npm --prefix frontend/CampusEats run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
