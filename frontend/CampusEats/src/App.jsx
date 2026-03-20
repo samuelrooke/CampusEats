@@ -1,53 +1,50 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+const PLACE = import.meta.env.VITE_PLACE || "Tampere";
 
 function App() {
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedRestaurant, setSelectedRestaurant] = useState("");
-  const [reloadKey, setReloadKey] = useState(0);
-  const place = import.meta.env.VITE_PLACE || "Tampere";
+
+  async function fetchMenus() {
+    setLoading(true);
+    setError("");
+
+    try {
+      let response = await fetch(`${API_BASE}/api/menus`);
+      if (!response.ok) throw new Error("Failed to fetch menus");
+
+      let data = await response.json();
+
+      if (Array.isArray(data) && data.length === 0) {
+        await fetch(`${API_BASE}/api/menus/refresh`, { method: "POST" });
+        response = await fetch(`${API_BASE}/api/menus`);
+        if (!response.ok) throw new Error("Failed to fetch menus");
+        data = await response.json();
+      }
+
+      setMenus(data);
+    } catch (err) {
+      if (err instanceof TypeError) {
+        setError(`Cannot connect to backend at ${API_BASE}`);
+      } else {
+        setError("Failed to fetch menus");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    const loadMenus = async () => {
-      setLoading(true);
-      setError("");
+    fetchMenus();
+  }, []);
 
-      try {
-        let res = await fetch(`${API_BASE}/api/menus`);
-        if (!res.ok) throw new Error("Failed to fetch menus");
-        let data = await res.json();
-
-        if (Array.isArray(data) && data.length === 0) {
-          await fetch(`${API_BASE}/api/menus/refresh`, { method: "POST" });
-          res = await fetch(`${API_BASE}/api/menus`);
-          if (!res.ok) throw new Error("Failed to fetch menus");
-          data = await res.json();
-        }
-
-        setMenus(data);
-      } catch (err) {
-        setError(err instanceof TypeError ? `Cannot connect to backend at ${API_BASE}` : "Failed to fetch menus");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMenus();
-  }, [reloadKey]);
-
-  const restaurants = useMemo(
-    () => [...new Set(menus.map((menu) => menu.restaurant).filter(Boolean))],
-    [menus]
-  );
-
-  const visibleMenus = useMemo(
-    () => menus.filter((menu) => menu.restaurant === selectedRestaurant),
-    [menus, selectedRestaurant]
-  );
+  const restaurants = [...new Set(menus.map((menu) => menu.restaurant).filter(Boolean))];
+  const visibleMenus = menus.filter((menu) => menu.restaurant === selectedRestaurant);
 
   if (loading) return <p>Loading menus...</p>;
   if (error) {
@@ -55,8 +52,33 @@ function App() {
       <main className="app">
         <h1>CampusEats Menus</h1>
         <p>Error: {error}</p>
-        <button onClick={() => setReloadKey((n) => n + 1)}>Retry</button>
+        <button onClick={fetchMenus}>Retry</button>
       </main>
+    );
+  }
+
+  let menuContent = <p>Open menu.</p>;
+
+  if (selectedRestaurant && visibleMenus.length === 0) {
+    menuContent = <p>No menu found for {selectedRestaurant}.</p>;
+  }
+
+  if (selectedRestaurant && visibleMenus.length > 0) {
+    menuContent = (
+      <section>
+        <h2 className="section-title">{selectedRestaurant} Menu</h2>
+        <div className="menu-grid">
+          {visibleMenus.map((menu) => (
+            <article key={menu.id} className="menu-card">
+              <h2 className="menu-title">{menu.title}</h2>
+              <p><strong>Restaurant:</strong> {menu.restaurant}</p>
+              <p>
+                <strong>Date:</strong> {new Date(menu.date).toLocaleDateString("fi-FI")}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
     );
   }
 
@@ -65,7 +87,7 @@ function App() {
       <h1>Welcome to CampusEats</h1>
 
       <section className="restaurant-section">
-        <h2 className="section-title">Restaurants in {place}:</h2>
+        <h2 className="section-title">Restaurants in {PLACE}:</h2>
         <div className="restaurant-list">
           {restaurants.map((restaurant) => (
             <article key={restaurant} className="restaurant-card">
@@ -81,26 +103,7 @@ function App() {
         </div>
       </section>
 
-      {selectedRestaurant === "" ? (
-        <p>Click Open menu to view dishes.</p>
-      ) : visibleMenus.length === 0 ? (
-        <p>No menu found for {selectedRestaurant}.</p>
-      ) : (
-        <section>
-          <h2 className="section-title">{selectedRestaurant} Menu</h2>
-          <div className="menu-grid">
-            {visibleMenus.map((menu) => (
-              <article key={menu.id} className="menu-card">
-                <h2 className="menu-title">{menu.title}</h2>
-                <p><strong>Restaurant:</strong> {menu.restaurant}</p>
-                <p>
-                  <strong>Date:</strong> {new Date(menu.date).toLocaleDateString("fi-FI")}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
+      {menuContent}
     </main>
   );
 }
