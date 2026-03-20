@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cron from "node-cron"
 import { scrapeRestaurant } from "./service/scraper.js";
 import { initDatabase } from "./database/init.js";
 import { saveMenus, getAllMenus } from "./service/menuService.js";
@@ -29,6 +30,15 @@ async function getOrRefreshMenus() {
   await refreshMenus();
   return await getAllMenus();
 }
+
+cron.schedule("0 */2 * * *", async () => {
+  try {
+    const saved = await refreshMenus();
+    console.log(`Cron refresh done: ${saved} items`);
+  } catch (error) {
+    console.error("Cron refresh failed", error);
+  }
+});
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
