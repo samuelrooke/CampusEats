@@ -31,7 +31,7 @@ async function getOrRefreshMenus() {
   return await getAllMenus();
 }
 
-cron.schedule("0 */2 * * *", async () => {
+cron.schedule("0 */4 * * *", async () => {
   try {
     const saved = await refreshMenus();
     console.log(`Cron refresh done: ${saved} items`);
