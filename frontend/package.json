@@ -1,0 +1,9 @@
+{
+  "name": "campuseats-frontend-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix CampusEats run dev",
+    "start": "npm --prefix CampusEats run dev",
+    "build": "npm --prefix CampusEats run build"
+  }
+}
