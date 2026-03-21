@@ -45,6 +45,18 @@ function App() {
 
   const restaurants = [...new Set(menus.map((menu) => menu.restaurant).filter(Boolean))];
   const visibleMenus = menus.filter((menu) => menu.restaurant === selectedRestaurant);
+  const getFoodTags = (menu) => {
+    // text search
+    const text = `${menu.title} ${Array.isArray(menu.tags) ? menu.tags.join(" ") : ""}`.toLowerCase();
+    // match vegan keywords
+    const vegan = /\bveg\b|vegan|kasvis/.test(text);
+    // match chicken keywords
+    const chicken = /kana|broileri/.test(text);
+    // match meat keywords
+    const meat = /liha|nauta|porsas|jauheliha|lammas|kinkku|pekoni/.test(text);
+    // return active tags
+    return [vegan && "vegan", meat && "meat", chicken && "chicken"].filter(Boolean);
+  };
 
   if (loading) return <p>Loading menus...</p>;
   if (error) {
@@ -68,15 +80,19 @@ function App() {
       <section>
         <h2 className="section-title">{selectedRestaurant} Menu</h2>
         <div className="menu-grid">
-          {visibleMenus.map((menu) => (
-            <article key={menu.id} className="menu-card">
-              <h2 className="menu-title">{menu.title}</h2>
-              <p><strong>Restaurant:</strong> {menu.restaurant}</p>
-              <p>
-                <strong>Date:</strong> {new Date(menu.date).toLocaleDateString("fi-FI")}
-              </p>
-            </article>
-          ))}
+          {visibleMenus.map((menu) => {
+            const foodTags = getFoodTags(menu);
+            return (
+              <article key={menu.id} className="menu-card">
+                <h2 className="menu-title">{menu.title}</h2>
+                <p><strong>Restaurant:</strong> {menu.restaurant}</p>
+                <p>
+                  <strong>Date:</strong> {new Date(menu.date).toLocaleDateString("fi-FI")}
+                </p>
+                <p><strong>Tags:</strong> {foodTags.length > 0 ? foodTags.join(", ") : "No tags"}</p>
+              </article>
+            );
+          })}
         </div>
       </section>
     );
