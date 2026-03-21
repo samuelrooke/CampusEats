@@ -1,30 +1,41 @@
-# Fullstack Development 4A00HB49-3001 Project
 
-## About the Project
-CampusEats is a course project for Fullstack Development.
+# CampusEats rel1.0.0
 
-The goal is to build an application that:
-- fetches menu data from campus dining sites,
-- updates food information regularly,
-- and adds tags to meals so users can easily identify and compare options.
+![campuseats frontpage](image.png)
 
-## Project Goals
-- Collect menu data from multiple campus sources
-- Normalize and store food data in a consistent format
-- Tag meals (for example by category, dietary info, or other useful labels)
-- Display clear and up-to-date menu information to users
+CampusEats is a fullstack web app for browsing campus restaurant menus with food tags.
 
-## Current Status
-Early development / planning phase.
+- Fetches and displays daily menus from campus restaurants (backend: Express + MySQL + web scraper using Puppeteer)
+- React + Vite frontend with tag search (vegan, meat, chicken)
+- Opening hours for Ravintola Rata shown in the UI
+- Users can filter menu items by tag using a top-right search bar
 
-## Tech Stack
-To be defined as implementation progresses.
+- Frontend: React 19, Vite, CSS
+- Backend: Node.js (Express), MySQL, web scraper implemented with Puppeteer
 
-## Getting Started
-Project setup instructions will be added once the initial structure is finalized.
+## Running the project
+1. Clone the repo
+2. Install dependencies in both `backend/` and `frontend/CampusEats/`
+3. Set up your MySQL database and environment variables (see backend/.env.example)
+4. Start backend: `npm start` in `backend/` (default port: 3001)
+5. Start frontend: `npm run dev` in `frontend/CampusEats/` (default port: 5173)
+6. Open http://localhost:5173 in your browser
+
+## Development
+- Frontend in `frontend/CampusEats/src/`
+- Backend in `backend/src/`
 
 ## Course Context
 This repository is developed as part of the Fullstack Development course (4A00HB49-3001).
 
-## Author 
+
+## To Be Added (Will be changed as development continues)
+- [ ] All student restaurants in the Tampere area
+- [ ] Admin login feature and functionality
+- [ ] Better UI and UX 
+- [ ] Some sort of anonymous chat between           restaurants
+- [ ] Mobile 
+- [ ] Multi language
+- [ ] Docker deployement
+## Author
 @samuelrooke
