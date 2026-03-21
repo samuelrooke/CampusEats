@@ -38,7 +38,7 @@ export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
           const text = (body.innerText || body.textContent || "").trim();
           return text.length > 100;
         },
-        { timeout: 15000 }
+        { timeout: 15000 } // timeout long because service is slow
       ).catch(() => null);
     }
 
@@ -55,7 +55,7 @@ export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
           lower.includes("consent") ||
           lower.includes("suostumus") ||
           lower.includes("ravintola rata") ||
-          lower.includes("rajaa ruokavalion") ||
+          lower.includes("rajaa ruokavalio") ||
           lower.includes("näytä viikko") ||
           lower.includes("ruokavaliot") ||
           lower.includes("suomienglishsvenska") ||

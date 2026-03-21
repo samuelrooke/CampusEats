@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-const PLACE = import.meta.env.VITE_PLACE || "Tampere";
+const PLACE = import.meta.env.VITE_PLACE || "Tampere"; // Placeholder for future implementation of other locations
 
 function App() {
   const [menus, setMenus] = useState([]);
@@ -13,7 +13,7 @@ function App() {
   async function fetchMenus() {
     setLoading(true);
     setError("");
-
+    // Menu fetching script (similar to locations.js)
     try {
       let response = await fetch(`${API_BASE}/api/menus`);
       if (!response.ok) throw new Error("Failed to fetch menus");
@@ -57,7 +57,7 @@ function App() {
     );
   }
 
-  let menuContent = <p>Open menu.</p>;
+  let menuContent = <p>Select a restaurant to view its menu.</p>;
 
   if (selectedRestaurant && visibleMenus.length === 0) {
     menuContent = <p>No menu found for {selectedRestaurant}.</p>;
@@ -93,10 +93,14 @@ function App() {
             <article key={restaurant} className="restaurant-card">
               <p className="restaurant-name">{restaurant}</p>
               <button
-                onClick={() => setSelectedRestaurant(restaurant)}
+                onClick={() =>
+                  setSelectedRestaurant((current) =>
+                    current === restaurant ? "" : restaurant
+                  )
+                }
                 className={`menu-button ${selectedRestaurant === restaurant ? "active" : ""}`}
               >
-                Open menu
+                {selectedRestaurant === restaurant ? "Close menu" : "Open menu"}
               </button>
             </article>
           ))}
