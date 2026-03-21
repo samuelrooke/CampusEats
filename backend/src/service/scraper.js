@@ -25,7 +25,7 @@ export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
       const link = document.querySelector('a[href*="jamix.cloud"]');
       return link ? link.href : null;
     });
-    console.log("Jamix link found:", jamixLink);
+
 
     // open jamix and wait for content to show up
     if (jamixLink) {
@@ -92,7 +92,7 @@ export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
 
     // drop duplicates
     const uniqueMeals = [...new Set(meals)];
-    console.log("Scraped items:", uniqueMeals.length);
+
     const date = new Date().toISOString().slice(0, 10);
     return uniqueMeals.map((title, i) => ({ id: i, title, date, source: source.name }));
   } finally {
