@@ -1,8 +1,9 @@
+const PLACE = "Tampere"; // TODO: Make PLACE change based on user location or selection
 import { useEffect, useState } from "react";
 import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-const PLACE = import.meta.env.VITE_PLACE || "Tampere"; // Placeholder for future implementation of other locations
+
 const OPENING_TIMETABLES = {
   "Ravintola Rata": "Mon-Fri 10:30-18:00, Sat 11:00-15:00",
 };
