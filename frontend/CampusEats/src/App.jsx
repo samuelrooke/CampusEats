@@ -3,12 +3,16 @@ import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 const PLACE = import.meta.env.VITE_PLACE || "Tampere"; // Placeholder for future implementation of other locations
+const OPENING_TIMETABLES = {
+  "Ravintola Rata": "Mon-Fri 10:30-18:00, Sat 11:00-15:00",
+};
 
 function App() {
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedRestaurant, setSelectedRestaurant] = useState("");
+  const [tagSearch, setTagSearch] = useState("");
 
   async function fetchMenus() {
     setLoading(true);
@@ -44,7 +48,9 @@ function App() {
   }, []);
 
   const restaurants = [...new Set(menus.map((menu) => menu.restaurant).filter(Boolean))];
-  const visibleMenus = menus.filter((menu) => menu.restaurant === selectedRestaurant);
+  const visibleMenus = selectedRestaurant
+    ? menus.filter((menu) => menu.restaurant === selectedRestaurant)
+    : menus;
   const getFoodTags = (menu) => {
     // text search
     const text = `${menu.title} ${Array.isArray(menu.tags) ? menu.tags.join(" ") : ""}`.toLowerCase();
@@ -58,6 +64,11 @@ function App() {
     return [vegan && "vegan", meat && "meat", chicken && "chicken"].filter(Boolean);
   };
 
+  const normalizedTagSearch = tagSearch.trim().toLowerCase();
+  const filteredMenus = normalizedTagSearch
+    ? visibleMenus.filter((menu) => getFoodTags(menu).includes(normalizedTagSearch))
+    : visibleMenus;
+
   if (loading) return <p>Loading menus...</p>;
   if (error) {
     return (
@@ -69,18 +80,14 @@ function App() {
     );
   }
 
-  let menuContent = <p>Select a restaurant to view its menu.</p>;
+  let menuContent = <p>No menus found.</p>;
 
-  if (selectedRestaurant && visibleMenus.length === 0) {
-    menuContent = <p>No menu found for {selectedRestaurant}.</p>;
-  }
-
-  if (selectedRestaurant && visibleMenus.length > 0) {
+  if (filteredMenus.length > 0) {
     menuContent = (
       <section>
-        <h2 className="section-title">{selectedRestaurant} Menu</h2>
+        <h2 className="section-title">{selectedRestaurant ? `${selectedRestaurant} Menu` : "All Menus"}</h2>
         <div className="menu-grid">
-          {visibleMenus.map((menu) => {
+          {filteredMenus.map((menu) => {
             const foodTags = getFoodTags(menu);
             return (
               <article key={menu.id} className="menu-card">
@@ -100,7 +107,16 @@ function App() {
 
   return (
     <main className="app">
-      <h1>Welcome to CampusEats</h1>
+      <section className="app-topbar">
+        <h1>Welcome to CampusEats</h1>
+        <input
+          type="text"
+          className="tag-search"
+          placeholder="Type vegan, meat or chicken"
+          value={tagSearch}
+          onChange={(event) => setTagSearch(event.target.value)}
+        />
+      </section>
 
       <section className="restaurant-section">
         <h2 className="section-title">Restaurants in {PLACE}:</h2>
@@ -108,6 +124,9 @@ function App() {
           {restaurants.map((restaurant) => (
             <article key={restaurant} className="restaurant-card">
               <p className="restaurant-name">{restaurant}</p>
+              {OPENING_TIMETABLES[restaurant] && (
+                <p>Opening hours: {OPENING_TIMETABLES[restaurant]}</p>
+              )}
               <button
                 onClick={() =>
                   setSelectedRestaurant((current) =>
