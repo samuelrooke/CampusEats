@@ -48,7 +48,9 @@ function App() {
   }, []);
 
   const restaurants = [...new Set(menus.map((menu) => menu.restaurant).filter(Boolean))];
-  const visibleMenus = menus.filter((menu) => menu.restaurant === selectedRestaurant);
+  const visibleMenus = selectedRestaurant
+    ? menus.filter((menu) => menu.restaurant === selectedRestaurant)
+    : menus;
   const getFoodTags = (menu) => {
     // text search
     const text = `${menu.title} ${Array.isArray(menu.tags) ? menu.tags.join(" ") : ""}`.toLowerCase();
@@ -78,16 +80,12 @@ function App() {
     );
   }
 
-  let menuContent = <p>Select a restaurant to view its menu.</p>;
+  let menuContent = <p>No menus found.</p>;
 
-  if (selectedRestaurant && visibleMenus.length === 0) {
-    menuContent = <p>No menu found for {selectedRestaurant}.</p>;
-  }
-
-  if (selectedRestaurant && visibleMenus.length > 0) {
+  if (filteredMenus.length > 0) {
     menuContent = (
       <section>
-        <h2 className="section-title">{selectedRestaurant} Menu</h2>
+        <h2 className="section-title">{selectedRestaurant ? `${selectedRestaurant} Menu` : "All Menus"}</h2>
         <div className="menu-grid">
           {filteredMenus.map((menu) => {
             const foodTags = getFoodTags(menu);
