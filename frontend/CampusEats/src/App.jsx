@@ -3,6 +3,9 @@ import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 const PLACE = import.meta.env.VITE_PLACE || "Tampere"; // Placeholder for future implementation of other locations
+const OPENING_TIMETABLES = {
+  "Ravintola Rata": "Mon-Fri 10:30-18:00, Sat 11:00-15:00",
+};
 
 function App() {
   const [menus, setMenus] = useState([]);
@@ -108,6 +111,9 @@ function App() {
           {restaurants.map((restaurant) => (
             <article key={restaurant} className="restaurant-card">
               <p className="restaurant-name">{restaurant}</p>
+              {OPENING_TIMETABLES[restaurant] && (
+                <p>Opening hours: {OPENING_TIMETABLES[restaurant]}</p>
+              )}
               <button
                 onClick={() =>
                   setSelectedRestaurant((current) =>
