@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-const PLACE = import.meta.env.VITE_PLACE || "Tampere";
+const PLACE = import.meta.env.VITE_PLACE || "Tampere"; // Placeholder for future implementation of other locations
 
 function App() {
   const [menus, setMenus] = useState([]);
@@ -13,7 +13,7 @@ function App() {
   async function fetchMenus() {
     setLoading(true);
     setError("");
-
+    // Menu fetching script (similar to locations.js)
     try {
       let response = await fetch(`${API_BASE}/api/menus`);
       if (!response.ok) throw new Error("Failed to fetch menus");
@@ -45,6 +45,18 @@ function App() {
 
   const restaurants = [...new Set(menus.map((menu) => menu.restaurant).filter(Boolean))];
   const visibleMenus = menus.filter((menu) => menu.restaurant === selectedRestaurant);
+  const getFoodTags = (menu) => {
+    // text search
+    const text = `${menu.title} ${Array.isArray(menu.tags) ? menu.tags.join(" ") : ""}`.toLowerCase();
+    // match vegan keywords
+    const vegan = /\bveg\b|vegan|kasvis/.test(text);
+    // match chicken keywords
+    const chicken = /kana|broileri/.test(text);
+    // match meat keywords
+    const meat = /liha|nauta|porsas|jauheliha|lammas|kinkku|pekoni/.test(text);
+    // return active tags
+    return [vegan && "vegan", meat && "meat", chicken && "chicken"].filter(Boolean);
+  };
 
   if (loading) return <p>Loading menus...</p>;
   if (error) {
@@ -57,7 +69,7 @@ function App() {
     );
   }
 
-  let menuContent = <p>Open menu.</p>;
+  let menuContent = <p>Select a restaurant to view its menu.</p>;
 
   if (selectedRestaurant && visibleMenus.length === 0) {
     menuContent = <p>No menu found for {selectedRestaurant}.</p>;
@@ -68,15 +80,19 @@ function App() {
       <section>
         <h2 className="section-title">{selectedRestaurant} Menu</h2>
         <div className="menu-grid">
-          {visibleMenus.map((menu) => (
-            <article key={menu.id} className="menu-card">
-              <h2 className="menu-title">{menu.title}</h2>
-              <p><strong>Restaurant:</strong> {menu.restaurant}</p>
-              <p>
-                <strong>Date:</strong> {new Date(menu.date).toLocaleDateString("fi-FI")}
-              </p>
-            </article>
-          ))}
+          {visibleMenus.map((menu) => {
+            const foodTags = getFoodTags(menu);
+            return (
+              <article key={menu.id} className="menu-card">
+                <h2 className="menu-title">{menu.title}</h2>
+                <p><strong>Restaurant:</strong> {menu.restaurant}</p>
+                <p>
+                  <strong>Date:</strong> {new Date(menu.date).toLocaleDateString("fi-FI")}
+                </p>
+                <p><strong>Tags:</strong> {foodTags.length > 0 ? foodTags.join(", ") : "No tags"}</p>
+              </article>
+            );
+          })}
         </div>
       </section>
     );
@@ -93,10 +109,14 @@ function App() {
             <article key={restaurant} className="restaurant-card">
               <p className="restaurant-name">{restaurant}</p>
               <button
-                onClick={() => setSelectedRestaurant(restaurant)}
+                onClick={() =>
+                  setSelectedRestaurant((current) =>
+                    current === restaurant ? "" : restaurant
+                  )
+                }
                 className={`menu-button ${selectedRestaurant === restaurant ? "active" : ""}`}
               >
-                Open menu
+                {selectedRestaurant === restaurant ? "Close menu" : "Open menu"}
               </button>
             </article>
           ))}
