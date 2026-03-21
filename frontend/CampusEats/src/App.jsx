@@ -12,6 +12,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedRestaurant, setSelectedRestaurant] = useState("");
+  const [tagSearch, setTagSearch] = useState("");
 
   async function fetchMenus() {
     setLoading(true);
@@ -61,6 +62,11 @@ function App() {
     return [vegan && "vegan", meat && "meat", chicken && "chicken"].filter(Boolean);
   };
 
+  const normalizedTagSearch = tagSearch.trim().toLowerCase();
+  const filteredMenus = normalizedTagSearch
+    ? visibleMenus.filter((menu) => getFoodTags(menu).includes(normalizedTagSearch))
+    : visibleMenus;
+
   if (loading) return <p>Loading menus...</p>;
   if (error) {
     return (
@@ -83,7 +89,7 @@ function App() {
       <section>
         <h2 className="section-title">{selectedRestaurant} Menu</h2>
         <div className="menu-grid">
-          {visibleMenus.map((menu) => {
+          {filteredMenus.map((menu) => {
             const foodTags = getFoodTags(menu);
             return (
               <article key={menu.id} className="menu-card">
@@ -103,7 +109,16 @@ function App() {
 
   return (
     <main className="app">
-      <h1>Welcome to CampusEats</h1>
+      <section className="app-topbar">
+        <h1>Welcome to CampusEats</h1>
+        <input
+          type="text"
+          className="tag-search"
+          placeholder="Type vegan, meat or chicken"
+          value={tagSearch}
+          onChange={(event) => setTagSearch(event.target.value)}
+        />
+      </section>
 
       <section className="restaurant-section">
         <h2 className="section-title">Restaurants in {PLACE}:</h2>
