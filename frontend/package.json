@@ -1,5 +1,6 @@
 {
   "name": "campuseats-frontend-workspace",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "npm --prefix CampusEats run dev",
