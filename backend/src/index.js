@@ -53,6 +53,21 @@ app.get("/api/menus", async (req, res) => {
   }
 });
 
+app.post("api/login", async (req, res) => {
+  const { username, password } = req.body;
+  if (
+    username === process.env.ADMIN_USER &&
+    password === process.env.ADMIN_PASS
+  ) {
+    const token = jwt.sign({ username, admin: true }, process.env.JWT_SECRET, { //Json Web Token
+      expiresIn: "1h",
+    });
+    res.json({ token });
+  } else {
+    res.status(401).json({ error: "Invalid credentials" });
+  }  
+})
+
 app.post("/api/menus/refresh", async (req, res) => {
   try {
     const saved = await refreshMenus();
