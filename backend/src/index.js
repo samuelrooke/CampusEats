@@ -70,7 +70,8 @@ app.get("/api/menus", async (req, res) => {
   }
 });
 
-app.post("api/login", verifyAdminToken, async (req, res) => {
+app.post("/api/login", async (req, res) => {
+  console.log("Login endpoint hit", req.body);
   const { username, password } = req.body;
   if (
     username === process.env.ADMIN_USER &&
