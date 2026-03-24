@@ -1,4 +1,5 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 import cors from "cors";
 import cron from "node-cron"
 import { scrapeRestaurant } from "./service/scraper.js";
@@ -31,6 +32,22 @@ async function getOrRefreshMenus() {
   return await getAllMenus();
 }
 
+function verifyAdminToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Missing or invalid token" });
+  }
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded.admin) return res.status(403).json({ error: "Forbidden" });
+    req.admin = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: "Invalid token" });
+  }
+}
+
 cron.schedule("0 */4 * * *", async () => {
   try {
     const saved = await refreshMenus();
@@ -52,6 +69,22 @@ app.get("/api/menus", async (req, res) => {
     res.status(500).json({ error: "Failed to load menus" });
   }
 });
+
+app.post("/api/login", async (req, res) => {
+  console.log("Login endpoint hit", req.body);
+  const { username, password } = req.body;
+  if (
+    username === process.env.ADMIN_USER &&
+    password === process.env.ADMIN_PASS
+  ) {
+    const token = jwt.sign({ username, admin: true }, process.env.JWT_SECRET, { //Json Web Token
+      expiresIn: "1h",
+    });
+    res.json({ token });
+  } else {
+    res.status(401).json({ error: "Invalid credentials" });
+  }  
+})
 
 app.post("/api/menus/refresh", async (req, res) => {
   try {
