@@ -97,8 +97,66 @@ async function scrapeJuvenes(restaurant) {
 }
 
 async function scrapeSodexo(restaurant) {
-  // TODO: Implement Sodexo scraping logic
-  return [];
+  const browser = await puppeteer.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(restaurant.menuUrl, { waitUntil: "networkidle2" });
+
+    // accept cookie
+    try {
+      await page.click('button#onetrust-accept-btn-handler');
+      await page.waitForTimeout(500);
+    } catch (e) {}
+
+
+    const meals = await page.evaluate(() => {
+
+      const tabLinks = Array.from(document.querySelectorAll('.meal-date-tabs .ui-tabs-anchor'));
+      const todayTab = tabLinks.find(a => a.textContent.trim().toLowerCase() === 'tänään');
+      let tabId = null;
+      if (todayTab) {
+        tabId = todayTab.getAttribute('href'); //#tabs-3
+      }
+      let mealRows = [];
+      if (tabId) {
+        const todayPanel = document.querySelector(tabId);
+        if (todayPanel && todayPanel.getAttribute('aria-hidden') !== 'true' && todayPanel.style.display !== 'none') {
+          mealRows = Array.from(todayPanel.querySelectorAll('.mealrow'));
+        }
+      }
+
+      if (!mealRows.length) {
+        const visiblePanel = Array.from(document.querySelectorAll('.ui-tabs-panel')).find(div => div.style.display !== 'none' && div.getAttribute('aria-hidden') !== 'true');
+        if (visiblePanel) {
+          mealRows = Array.from(visiblePanel.querySelectorAll('.mealrow'));
+        }
+      }
+
+      if (!mealRows.length) {
+        mealRows = Array.from(document.querySelectorAll('.mealrow'));
+      }
+      return mealRows.map(row => {
+        const type = row.querySelector('.meal-type')?.textContent.trim() || '';
+        const name = row.querySelector('.meal-name')?.textContent.trim() || '';
+        const prices = Array.from(row.querySelectorAll('.mealprices p')).map(p => p.textContent.trim()).filter(Boolean);
+        const diets = Array.from(row.querySelectorAll('.mealdietcodes span')).map(span => span.textContent.trim()).filter(Boolean);
+        return { type, name, prices, diets };
+      });
+    });
+
+    const date = new Date().toISOString().slice(0, 10);
+    return meals.map((meal, i) => ({
+      id: i,
+      title: meal.name,
+      type: meal.type,
+      prices: meal.prices,
+      diets: meal.diets,
+      date,
+      source: restaurant.name
+    }));
+  } finally {
+    await browser.close();
+  }
 }
 
 async function scrapeCompass(restaurant) {
@@ -115,6 +173,6 @@ export async function scrapeRestaurant(restaurant) {
     case "compass":
       return await scrapeCompass(restaurant);
     default:
-      throw new Error(`Unknown restaurant type: ${restaurant.type}`);
+      throw new Error("Unknown restaurant type: " + restaurant.type);
   }
 }
