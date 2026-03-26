@@ -1,31 +1,19 @@
 import puppeteer from "puppeteer";
 
-const DEFAULT_SOURCE = {
-  name: "Ravintola Rata",
-  menuUrl: "https://juvenes.fi/rata/",
-};
-
-/**
- * Scrapes menu items from a Juvenes restaurant via Jamix
- * @param {Object} [source] - Restaurant with name and menuUrl
- * @returns {Promise<Object[]>} Menu items with id, title, date, source
- */
-
-export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
+async function scrapeJuvenes(restaurant) {
   // start browser headless
   const browser = await puppeteer.launch({ headless: true });
   try {
     const page = await browser.newPage();
 
     // open restaurant page
-    await page.goto(source.menuUrl, { waitUntil: "networkidle2" });
+    await page.goto(restaurant.menuUrl, { waitUntil: "networkidle2" });
 
     // grab jamix link from juvenes page
     const jamixLink = await page.evaluate(() => {
       const link = document.querySelector('a[href*="jamix.cloud"]');
       return link ? link.href : null;
     });
-
 
     // open jamix and wait for content to show up
     if (jamixLink) {
@@ -94,9 +82,32 @@ export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
     const uniqueMeals = [...new Set(meals)];
 
     const date = new Date().toISOString().slice(0, 10);
-    return uniqueMeals.map((title, i) => ({ id: i, title, date, source: source.name }));
+    return uniqueMeals.map((title, i) => ({ id: i, title, date, source: restaurant.name }));
   } finally {
     // close browser
     await browser.close();
+  }
+}
+
+async function scrapeSodexo(restaurant) {
+  // TODO: Implement Sodexo scraping logic
+  return [];
+}
+
+async function scrapeCompass(restaurant) {
+  // TODO: Implement Compass scraping logic
+  return [];
+}
+
+export async function scrapeRestaurant(restaurant) {
+  switch (restaurant.type) {
+    case "juvenes":
+      return await scrapeJuvenes(restaurant);
+    case "sodexo":
+      return await scrapeSodexo(restaurant);
+    case "compass":
+      return await scrapeCompass(restaurant);
+    default:
+      throw new Error(`Unknown restaurant type: ${restaurant.type}`);
   }
 }
