@@ -2,7 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 import cron from "node-cron"
-import { scrapeRestaurant } from "./service/scraper.js";
+import { scrapeRestaurant, RESTAURANTS } from "./service/scraper.js";
 import { initDatabase } from "./database/init.js";
 import { saveMenus, getAllMenus } from "./service/menuService.js";
 
@@ -19,9 +19,23 @@ app.use(express.json());
 app.use(cors());
 
 async function refreshMenus() {
-  const meals = await scrapeRestaurant();
-  await saveMenus(meals, "Ravintola Rata");
-  return meals.length;
+  let totalSaved = 0;
+  for (const restaurant of RESTAURANTS) {
+    try {
+      console.log("[refreshing] scraping " + restaurant.name + "...");
+      const meals = await scrapeRestaurant(restaurant);
+      if (meals.length > 0) {
+        await saveMenus(meals, restaurant.name);
+        totalSaved += meals.length;
+        console.log("[refresh] saved " + meals.length + " meals for " + restaurant.name);
+      } else {
+        console.warn("[refresh] no meals found for " + restaurant.name);
+      }
+    } catch (err) {
+      console.error("[refresh] error scraping " + restaurant.name + ":", err.message);
+    }
+  }
+  return totalSaved;
 }
 
 async function getOrRefreshMenus() {
@@ -51,7 +65,7 @@ function verifyAdminToken(req, res, next) {
 cron.schedule("0 */4 * * *", async () => {
   try {
     const saved = await refreshMenus();
-    console.log(`Cron refresh done: ${saved} items`);
+    console.log("Cron refresh done: " + saved + " items");
   } catch (error) {
     console.error("Cron refresh failed", error);
   }
@@ -96,5 +110,5 @@ app.post("/api/menus/refresh", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Backend running on port ${port}`);
+  console.log("Backend running on port " + port);
 });

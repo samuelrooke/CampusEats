@@ -1,31 +1,26 @@
+export const RESTAURANTS = [
+  { name: "Ravintola Rata", menuUrl: "https://juvenes.fi/rata/", type: "juvenes" },
+  { name: "Sodexo Linna", menuUrl: "https://www.sodexo.fi/ravintolat/ravintola-linna", type: "sodexo" },
+  { name: "Sodexo Hertsi", menuUrl: "https://www.sodexo.fi/ravintolat/ravintola-hertsi", type: "sodexo" },
+  { name: "Compass Reaktori", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/reaktori/", type: "compass" },
+  { name: "Compass Minerva", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/minerva/", type: "compass" }
+];
 import puppeteer from "puppeteer";
 
-const DEFAULT_SOURCE = {
-  name: "Ravintola Rata",
-  menuUrl: "https://juvenes.fi/rata/",
-};
-
-/**
- * Scrapes menu items from a Juvenes restaurant via Jamix
- * @param {Object} [source] - Restaurant with name and menuUrl
- * @returns {Promise<Object[]>} Menu items with id, title, date, source
- */
-
-export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
+async function scrapeJuvenes(restaurant) {
   // start browser headless
   const browser = await puppeteer.launch({ headless: true });
   try {
     const page = await browser.newPage();
 
     // open restaurant page
-    await page.goto(source.menuUrl, { waitUntil: "networkidle2" });
+    await page.goto(restaurant.menuUrl, { waitUntil: "networkidle2" });
 
     // grab jamix link from juvenes page
     const jamixLink = await page.evaluate(() => {
       const link = document.querySelector('a[href*="jamix.cloud"]');
       return link ? link.href : null;
     });
-
 
     // open jamix and wait for content to show up
     if (jamixLink) {
@@ -94,9 +89,90 @@ export async function scrapeRestaurant(source = DEFAULT_SOURCE) {
     const uniqueMeals = [...new Set(meals)];
 
     const date = new Date().toISOString().slice(0, 10);
-    return uniqueMeals.map((title, i) => ({ id: i, title, date, source: source.name }));
+    return uniqueMeals.map((title, i) => ({ id: i, title, date, source: restaurant.name }));
   } finally {
     // close browser
     await browser.close();
+  }
+}
+
+async function scrapeSodexo(restaurant) {
+  const browser = await puppeteer.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(restaurant.menuUrl, { waitUntil: "networkidle2" });
+
+    // accept cookie
+    try {
+      await page.click('button#onetrust-accept-btn-handler');
+      await page.waitForTimeout(500);
+    } catch (e) {}
+
+
+    const meals = await page.evaluate(() => {
+
+      const tabLinks = Array.from(document.querySelectorAll('.meal-date-tabs .ui-tabs-anchor'));
+      const todayTab = tabLinks.find(a => a.textContent.trim().toLowerCase() === 'tänään');
+      let tabId = null;
+      if (todayTab) {
+        tabId = todayTab.getAttribute('href'); //#tabs-3
+      }
+      let mealRows = [];
+      if (tabId) {
+        const todayPanel = document.querySelector(tabId);
+        if (todayPanel && todayPanel.getAttribute('aria-hidden') !== 'true' && todayPanel.style.display !== 'none') {
+          mealRows = Array.from(todayPanel.querySelectorAll('.mealrow'));
+        }
+      }
+
+      if (!mealRows.length) {
+        const visiblePanel = Array.from(document.querySelectorAll('.ui-tabs-panel')).find(div => div.style.display !== 'none' && div.getAttribute('aria-hidden') !== 'true');
+        if (visiblePanel) {
+          mealRows = Array.from(visiblePanel.querySelectorAll('.mealrow'));
+        }
+      }
+
+      if (!mealRows.length) {
+        mealRows = Array.from(document.querySelectorAll('.mealrow'));
+      }
+      return mealRows.map(row => {
+        const type = row.querySelector('.meal-type')?.textContent.trim() || '';
+        const name = row.querySelector('.meal-name')?.textContent.trim() || '';
+        const prices = Array.from(row.querySelectorAll('.mealprices p')).map(p => p.textContent.trim()).filter(Boolean);
+        const diets = Array.from(row.querySelectorAll('.mealdietcodes span')).map(span => span.textContent.trim()).filter(Boolean);
+        return { type, name, prices, diets };
+      });
+    });
+
+    const date = new Date().toISOString().slice(0, 10);
+    return meals.map((meal, i) => ({
+      id: i,
+      title: meal.name,
+      type: meal.type,
+      prices: meal.prices,
+      diets: meal.diets,
+      date,
+      source: restaurant.name
+    }));
+  } finally {
+    await browser.close();
+  }
+}
+
+async function scrapeCompass(restaurant) {
+  // TODO: Implement Compass scraping logic
+  return [];
+}
+
+export async function scrapeRestaurant(restaurant) {
+  switch (restaurant.type) {
+    case "juvenes":
+      return await scrapeJuvenes(restaurant);
+    case "sodexo":
+      return await scrapeSodexo(restaurant);
+    case "compass":
+      return await scrapeCompass(restaurant);
+    default:
+      throw new Error("Unknown restaurant type: " + restaurant.type);
   }
 }
