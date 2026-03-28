@@ -1,9 +1,16 @@
+// curl -X POST http://localhost:3001/api/menus/refresh
 export const RESTAURANTS = [
-  { name: "Ravintola Rata", menuUrl: "https://juvenes.fi/rata/", type: "juvenes" },
+  { name: "Campusravita", menuUrl: "https://www.campusravita.fi/ruokalistat/", type: "campusravita" },
+  { name: "Frenckell ja Piha", menuUrl: "https://www.juvenes.fi/frenckell/", type: "juvenes" },
+  { name: "Arvo", menuUrl: "https://www.juvenes.fi/arvo/", type: "juvenes" },
   { name: "Sodexo Linna", menuUrl: "https://www.sodexo.fi/ravintolat/ravintola-linna", type: "sodexo" },
+  { name: "Ravintola Rata", menuUrl: "https://juvenes.fi/rata/", type: "juvenes" },
+  { name: "Finn Medi", menuUrl: "https://www.juvenes.fi/finnmedi/", type: "juvenes" },
   { name: "Sodexo Hertsi", menuUrl: "https://www.sodexo.fi/ravintolat/ravintola-hertsi", type: "sodexo" },
-  { name: "Compass Reaktori", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/reaktori/", type: "compass" },
-  { name: "Compass Minerva", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/minerva/", type: "compass" }
+  { name: "Tori", menuUrl: "https://www.juvenes.fi/tori/", type: "juvenes" },
+  { name: "Mediapolis", menuUrl: "https://www.juvenes.fi/mediapolis/", type: "juvenes" },
+  { name: "Compass Minerva", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/minerva/", type: "compass" },
+  { name: "Compass Reaktori", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/reaktori/", type: "compass" }
 ];
 import puppeteer from "puppeteer";
 
@@ -110,30 +117,15 @@ async function scrapeSodexo(restaurant) {
 
 
     const meals = await page.evaluate(() => {
-
       const tabLinks = Array.from(document.querySelectorAll('.meal-date-tabs .ui-tabs-anchor'));
       const todayTab = tabLinks.find(a => a.textContent.trim().toLowerCase() === 'tänään');
-      let tabId = null;
-      if (todayTab) {
-        tabId = todayTab.getAttribute('href'); //#tabs-3
-      }
       let mealRows = [];
-      if (tabId) {
+      if (todayTab) {
+        const tabId = todayTab.getAttribute('href');
         const todayPanel = document.querySelector(tabId);
         if (todayPanel && todayPanel.getAttribute('aria-hidden') !== 'true' && todayPanel.style.display !== 'none') {
           mealRows = Array.from(todayPanel.querySelectorAll('.mealrow'));
         }
-      }
-
-      if (!mealRows.length) {
-        const visiblePanel = Array.from(document.querySelectorAll('.ui-tabs-panel')).find(div => div.style.display !== 'none' && div.getAttribute('aria-hidden') !== 'true');
-        if (visiblePanel) {
-          mealRows = Array.from(visiblePanel.querySelectorAll('.mealrow'));
-        }
-      }
-
-      if (!mealRows.length) {
-        mealRows = Array.from(document.querySelectorAll('.mealrow'));
       }
       return mealRows.map(row => {
         const type = row.querySelector('.meal-type')?.textContent.trim() || '';
@@ -160,8 +152,19 @@ async function scrapeSodexo(restaurant) {
 }
 
 async function scrapeCompass(restaurant) {
-  // TODO: Implement Compass scraping logic
-  return [];
+  const browser = await puppeteer.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(restaurant.menuUrl, { waitUntil: "networkidle2" });
+    const meals = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('.meal-item--name-container > span.compass-text[font-weight-strong]'))
+        .map(item => item.textContent.trim()).filter(Boolean);
+    });
+    const date = new Date().toISOString().slice(0, 10);
+    return meals.map((title, i) => ({ id: i, title, date, source: restaurant.name }));
+  } finally {
+    await browser.close();
+  }
 }
 
 export async function scrapeRestaurant(restaurant) {
