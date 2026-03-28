@@ -125,20 +125,12 @@ function HomePage() {
         <div className="restaurant-list">
           {restaurants.map((restaurant) => (
             <article key={restaurant} className="restaurant-card">
-              <p className="restaurant-name">{restaurant}</p>
+              <Link to={`/restaurant/${encodeURIComponent(restaurant)}`} className="restaurant-name-link">
+                <p className="restaurant-name">{restaurant}</p>
+              </Link>
               {OPENING_TIMETABLES[restaurant] && (
                 <p>Opening hours: {OPENING_TIMETABLES[restaurant]}</p>
               )}
-              <button
-                onClick={() =>
-                  setSelectedRestaurant((current) =>
-                    current === restaurant ? "" : restaurant
-                  )
-                }
-                className={`menu-button ${selectedRestaurant === restaurant ? "active" : ""}`}
-              >
-                {selectedRestaurant === restaurant ? "Close menu" : "Open menu"}
-              </button>
             </article>
           ))}
         </div>
