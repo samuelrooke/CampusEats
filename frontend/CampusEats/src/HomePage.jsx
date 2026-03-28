@@ -1,5 +1,6 @@
 const PLACE = "Tampere"; // TODO: Make PLACE change based on user location or selection
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
@@ -12,7 +13,7 @@ function HomePage() {
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedRestaurant, setSelectedRestaurant] = useState("");
+  const [selectedRestaurant] = useState("");
   const [tagSearch, setTagSearch] = useState("");
 
   async function fetchMenus() {
