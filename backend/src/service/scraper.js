@@ -1,9 +1,15 @@
 export const RESTAURANTS = [
-  { name: "Ravintola Rata", menuUrl: "https://juvenes.fi/rata/", type: "juvenes" },
+  { name: "Campusravita", menuUrl: "https://www.campusravita.fi/ruokalistat/", type: "campusravita" },
+  { name: "Frenckell ja Piha", menuUrl: "https://www.juvenes.fi/frenckell/", type: "juvenes" },
+  { name: "Arvo", menuUrl: "https://www.juvenes.fi/arvo/", type: "juvenes" },
   { name: "Sodexo Linna", menuUrl: "https://www.sodexo.fi/ravintolat/ravintola-linna", type: "sodexo" },
+  { name: "Ravintola Rata", menuUrl: "https://juvenes.fi/rata/", type: "juvenes" },
+  { name: "Finn Medi", menuUrl: "https://www.juvenes.fi/finnmedi/", type: "juvenes" },
   { name: "Sodexo Hertsi", menuUrl: "https://www.sodexo.fi/ravintolat/ravintola-hertsi", type: "sodexo" },
-  { name: "Compass Reaktori", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/reaktori/", type: "compass" },
-  { name: "Compass Minerva", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/minerva/", type: "compass" }
+  { name: "Tori", menuUrl: "https://www.juvenes.fi/tori/", type: "juvenes" },
+  { name: "Mediapolis", menuUrl: "https://www.juvenes.fi/mediapolis/", type: "juvenes" },
+  { name: "Compass Minerva", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/minerva/", type: "compass" },
+  { name: "Compass Reaktori", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/reaktori/", type: "compass" }
 ];
 import puppeteer from "puppeteer";
 
