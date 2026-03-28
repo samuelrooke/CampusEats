@@ -1,150 +1,15 @@
-const PLACE = "Tampere"; // TODO: Make PLACE change based on user location or selection
-import { useEffect, useState } from "react";
-import "./App.css";
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-
-const OPENING_TIMETABLES = {
-  "Ravintola Rata": "Mon-Fri 10:30-18:00, Sat 11:00-15:00",
-};
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import HomePage from "./HomePage";
 
 function App() {
-  const [menus, setMenus] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedRestaurant, setSelectedRestaurant] = useState("");
-  const [tagSearch, setTagSearch] = useState("");
-
-  async function fetchMenus() {
-    setLoading(true);
-    setError("");
-    // Menu fetching script (similar to locations.js)
-    try {
-      let response = await fetch(`${API_BASE}/api/menus`);
-      if (!response.ok) throw new Error("Failed to fetch menus");
-
-      let data = await response.json();
-
-      if (Array.isArray(data) && data.length === 0) {
-        await fetch(`${API_BASE}/api/menus/refresh`, { method: "POST" });
-        response = await fetch(`${API_BASE}/api/menus`);
-        if (!response.ok) throw new Error("Failed to fetch menus");
-        data = await response.json();
-      }
-
-      setMenus(data);
-    } catch (err) {
-      if (err instanceof TypeError) {
-        setError(`Cannot connect to backend at ${API_BASE}`);
-      } else {
-        setError("Failed to fetch menus");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchMenus();
-  }, []);
-
-  const restaurants = [...new Set(menus.map((menu) => menu.restaurant).filter(Boolean))];
-  const visibleMenus = selectedRestaurant
-    ? menus.filter((menu) => menu.restaurant === selectedRestaurant)
-    : menus;
-  const getFoodTags = (menu) => {
-    // text search
-    const text = `${menu.title} ${Array.isArray(menu.tags) ? menu.tags.join(" ") : ""}`.toLowerCase();
-    // match vegan keywords
-    const vegan = /\bveg\b|vegan|kasvis/.test(text);
-    // match chicken keywords
-    const chicken = /kana|broileri/.test(text);
-    // match meat keywords
-    const meat = /liha|nauta|porsas|jauheliha|lammas|kinkku|pekoni/.test(text);
-    // return active tags
-    return [vegan && "vegan", meat && "meat", chicken && "chicken"].filter(Boolean);
-  };
-
-  const normalizedTagSearch = tagSearch.trim().toLowerCase();
-  const filteredMenus = normalizedTagSearch
-    ? visibleMenus.filter((menu) => getFoodTags(menu).includes(normalizedTagSearch))
-    : visibleMenus;
-
-  if (loading) return <p>Loading menus...</p>;
-  if (error) {
-    return (
-      <main className="app">
-        <h1>CampusEats Menus</h1>
-        <p>Error: {error}</p>
-        <button onClick={fetchMenus}>Retry</button>
-      </main>
-    );
-  }
-
-  let menuContent = <p>No menus found.</p>;
-
-  if (filteredMenus.length > 0) {
-    menuContent = (
-      <section>
-        <h2 className="section-title">{selectedRestaurant ? `${selectedRestaurant} Menu` : "All Menus"}</h2>
-        <div className="menu-grid">
-          {filteredMenus.map((menu) => {
-            const foodTags = getFoodTags(menu);
-            return (
-              <article key={menu.id} className="menu-card">
-                <h2 className="menu-title">{menu.title}</h2>
-                <p><strong>Restaurant:</strong> {menu.restaurant}</p>
-                <p>
-                  <strong>Date:</strong> {new Date(menu.date).toLocaleDateString("fi-FI")}
-                </p>
-                <p><strong>Tags:</strong> {foodTags.length > 0 ? foodTags.join(", ") : "No tags"}</p>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-    );
-  }
-
   return (
-    <main className="app">
-      <section className="app-topbar">
-        <h1>Welcome to CampusEats</h1>
-        <input
-          type="text"
-          className="tag-search"
-          placeholder="Type vegan, meat or chicken"
-          value={tagSearch}
-          onChange={(event) => setTagSearch(event.target.value)}
-        />
-      </section>
-
-      <section className="restaurant-section">
-        <h2 className="section-title">Restaurants in {PLACE}:</h2>
-        <div className="restaurant-list">
-          {restaurants.map((restaurant) => (
-            <article key={restaurant} className="restaurant-card">
-              <p className="restaurant-name">{restaurant}</p>
-              {OPENING_TIMETABLES[restaurant] && (
-                <p>Opening hours: {OPENING_TIMETABLES[restaurant]}</p>
-              )}
-              <button
-                onClick={() =>
-                  setSelectedRestaurant((current) =>
-                    current === restaurant ? "" : restaurant
-                  )
-                }
-                className={`menu-button ${selectedRestaurant === restaurant ? "active" : ""}`}
-              >
-                {selectedRestaurant === restaurant ? "Close menu" : "Open menu"}
-              </button>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {menuContent}
-    </main>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        {/* Future: Add restaurant routes here */}
+      </Routes>
+    </Router>
   );
 }
 
