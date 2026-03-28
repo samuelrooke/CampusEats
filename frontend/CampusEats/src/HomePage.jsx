@@ -6,7 +6,17 @@ import "./App.css";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 const OPENING_TIMETABLES = {
+  "Campusravita": "Mon-Fri 10:30-16:00",
+  "Frenckell ja Piha": "Mon-Fri 10:30-15:00",
+  "Arvo": "Mon-Fri 10:30-15:00",
+  "Sodexo Linna": "Mon-Fri 10:30-15:00",
   "Ravintola Rata": "Mon-Fri 10:30-18:00, Sat 11:00-15:00",
+  "Finn Medi": "Mon-Fri 10:30-15:00",
+  "Sodexo Hertsi": "Mon-Fri 10:00-16:00",
+  "Tori": "Mon-Fri 10:30-15:00",
+  "Mediapolis": "Mon-Fri 10:30-15:00",
+  "Compass Minerva": "Mon-Fri 10:30-15:00",
+  "Compass Reaktori": "Mon-Fri 10:30-15:00",
 };
 
 function HomePage() {
@@ -49,7 +59,20 @@ function HomePage() {
     fetchMenus();
   }, []);
 
-  const restaurants = [...new Set(menus.map((menu) => menu.restaurant).filter(Boolean))];
+  // Hardcoded restaurant list for reliable display
+  const restaurants = [
+    "Campusravita",
+    "Frenckell ja Piha",
+    "Arvo",
+    "Sodexo Linna",
+    "Ravintola Rata",
+    "Finn Medi",
+    "Sodexo Hertsi",
+    "Tori",
+    "Mediapolis",
+    "Compass Minerva",
+    "Compass Reaktori",
+  ];
   const visibleMenus = selectedRestaurant
     ? menus.filter((menu) => menu.restaurant === selectedRestaurant)
     : menus;
@@ -109,6 +132,13 @@ function HomePage() {
 
   return (
     <main className="app">
+      {/* Mapbox placeholder */}
+      <section className="mb-8">
+        <div style={{ width: '100%', height: '300px', background: '#e0e7ef', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '1.5rem', fontWeight: 500 }}>
+          Mapbox Map Placeholder
+        </div>
+      </section>
+
       <section className="app-topbar">
         <h1>Welcome to CampusEats</h1>
         <input
