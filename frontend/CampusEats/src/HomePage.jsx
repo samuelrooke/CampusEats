@@ -158,9 +158,9 @@ function HomePage() {
               <Link to={`/restaurant/${encodeURIComponent(restaurant)}`} className="restaurant-name-link">
                 <p className="restaurant-name">{restaurant}</p>
               </Link>
-              {OPENING_TIMETABLES[restaurant] && (
-                <p>Opening hours: {OPENING_TIMETABLES[restaurant]}</p>
-              )}
+              <p className="text-gray-600 text-sm">
+                Opening hours: {OPENING_TIMETABLES[restaurant] || "Not available"}
+              </p>
             </article>
           ))}
         </div>
