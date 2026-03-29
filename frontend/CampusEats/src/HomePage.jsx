@@ -1,6 +1,7 @@
 const PLACE = "Tampere"; // TODO: Make PLACE change based on user location or selection
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import LeafletMap from "./LeafletMap";
 import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
@@ -15,8 +16,8 @@ const OPENING_TIMETABLES = {
   "Sodexo Hertsi": "Mon-Fri 10:00-16:00",
   "Tori": "Mon-Fri 10:30-15:00",
   "Mediapolis": "Mon-Fri 10:30-15:00",
-  "Compass Minerva": "Mon-Fri 10:30-15:00",
-  "Compass Reaktori": "Mon-Fri 10:30-15:00",
+  "Food&Co Minerva": "Mon-Fri 10:30-15:00",
+  "Food&Co Reaktori": "Mon-Fri 10:30-15:00",
 };
 
 function HomePage() {
@@ -70,8 +71,8 @@ function HomePage() {
     "Sodexo Hertsi",
     "Tori",
     "Mediapolis",
-    "Compass Minerva",
-    "Compass Reaktori",
+    "Food&Co Minerva",
+    "Food&Co Reaktori",
   ];
   const visibleMenus = selectedRestaurant
     ? menus.filter((menu) => menu.restaurant === selectedRestaurant)
@@ -132,15 +133,12 @@ function HomePage() {
 
   return (
     <main className="app">
-      {/* Mapbox placeholder */}
       <section className="mb-8">
-        <div style={{ width: '100%', height: '300px', background: '#e0e7ef', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '1.5rem', fontWeight: 500 }}>
-          Mapbox Map Placeholder
-        </div>
+        <LeafletMap />
       </section>
 
       <section className="app-topbar">
-        <h1>Welcome to CampusEats</h1>
+        <h1 className="text-center">Welcome to CampusEats</h1>
         <input
           type="text"
           className="tag-search"
