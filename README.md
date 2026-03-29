@@ -1,5 +1,5 @@
 
-# CampusEats rel1.0.0 beta
+# CampusEats rel2.0.0 beta
 
 ![campuseats](image-1.png)
 
