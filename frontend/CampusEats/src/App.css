@@ -2,8 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Drastic debug style: apply to .debug-bg */
+.debug-bg {
+  @apply bg-red-700 text-white;
+}
+
 .app {
-  @apply min-h-screen bg-gray-50 px-4 py-8;
+  @apply min-h-screen px-4 py-8;
 }
 
 .app-topbar {
@@ -11,7 +16,7 @@
 }
 
 .app-topbar h1 {
-  @apply text-3xl font-bold text-blue-700 mb-3;
+  @apply text-3xl font-bold mb-3 text-center;
 }
 
 .restaurant-section {
