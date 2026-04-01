@@ -5,6 +5,7 @@ import cron from "node-cron"
 import { scrapeRestaurant, RESTAURANTS } from "./service/scraper.js";
 import { initDatabase } from "./database/init.js";
 import { saveMenus, getAllMenus } from "./service/menuService.js";
+import { getCommentsByRestaurant, addComment } from "./service/commentsService.js";
 
 /**
  * @fileoverview CampusEats backend API server
@@ -99,6 +100,31 @@ app.post("/api/login", async (req, res) => {
     res.status(401).json({ error: "Invalid credentials" });
   }  
 })
+
+// Get comments for a restaurant
+app.get("/api/comments/:restaurantId", async (req, res) => {
+  try {
+    const restaurantId = req.params.restaurantId;
+    const comments = await getCommentsByRestaurant(restaurantId);
+    res.json(comments);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch comments" });
+  }
+});
+
+// Add a new comment
+app.post("/api/comments", async (req, res) => {
+  try {
+    const { restaurantId, text } = req.body;
+    if (!restaurantId || !text) {
+      return res.status(400).json({ error: "Missing restaurantId or text" });
+    }
+    await addComment({ restaurantId, text });
+    res.status(201).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to add comment" });
+  }
+});
 
 app.post("/api/menus/refresh", async (req, res) => {
   try {
