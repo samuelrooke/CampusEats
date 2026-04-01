@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 .app {
   @apply min-h-screen px-4 py-8;
 }
@@ -66,3 +65,61 @@
   @apply mt-1;
   color: #111;
 }
+
+/* Comments Section */
+.comments-section {
+  @apply mt-12 mb-8 p-6 rounded-xl border border-gray-200 shadow-sm;
+  background-color: #f9f9f9;
+}
+
+.comments-section h2 {
+  @apply text-2xl font-bold mb-6;
+  color: #111;
+}
+
+.comments-list {
+  @apply mb-6 space-y-4;
+}
+
+.comment-card {
+  @apply p-4 rounded-lg border border-gray-200 bg-white;
+}
+
+.comment-text {
+  @apply text-base mb-2;
+  color: #333;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.comment-date {
+  @apply text-sm;
+  color: #999;
+}
+
+.comment-form {
+  @apply flex flex-col gap-3;
+}
+
+.comment-form textarea {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.comment-form button {
+  @apply px-6 py-2 rounded-lg bg-black text-white font-semibold cursor-pointer transition-opacity duration-150;
+}
+
+.comment-form button:hover:not(:disabled) {
+  @apply opacity-90;
+}
+
+.comment-form button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.back-link {
+  @apply mb-4 text-blue-600 underline cursor-pointer hover:text-blue-800;
+}
+

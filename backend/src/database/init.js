@@ -62,6 +62,17 @@ export async function initDatabase() {
       )
     `);
 
+    await query(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        restaurantId INT NOT NULL,
+        text TEXT NOT NULL,
+        timestamp BIGINT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (restaurantId) REFERENCES restaurants(id) ON DELETE CASCADE
+      )
+    `);
+
     console.log('Database tables initialized successfully');
   } catch (error) {
     console.error('Failed to initialize database:', error);
