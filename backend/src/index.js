@@ -4,6 +4,7 @@ import cors from "cors";
 import cron from "node-cron"
 import { scrapeRestaurant, RESTAURANTS } from "./service/scraper.js";
 import { initDatabase } from "./database/init.js";
+import { query } from "./database/db.js";
 import { saveMenus, getAllMenus } from "./service/menuService.js";
 import { getCommentsByRestaurant, addComment } from "./service/commentsService.js";
 
@@ -123,6 +124,77 @@ app.post("/api/comments", async (req, res) => {
     res.status(201).json({ success: true });
   } catch (error) {
     res.status(500).json({ error: "Failed to add comment" });
+  }
+});
+
+// Delete a comment (admin only)
+app.delete("/api/comments/:id", verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sql = "DELETE FROM comments WHERE id = ?";
+    await query(sql, [id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete comment" });
+  }
+});
+
+// Get all comments (admin only)
+app.get("/api/admin/comments", verifyAdminToken, async (req, res) => {
+  try {
+    const sql = "SELECT c.*, r.name as restaurantName FROM comments c LEFT JOIN restaurants r ON c.restaurantId = r.id ORDER BY c.timestamp DESC";
+    const comments = await query(sql);
+    res.json(comments);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch comments" });
+  }
+});
+
+// Get all restaurants (admin only)
+app.get("/api/admin/restaurants", verifyAdminToken, async (req, res) => {
+  try {
+    const sql = "SELECT * FROM restaurants ORDER BY name";
+    const restaurants = await query(sql);
+    res.json(restaurants);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch restaurants" });
+  }
+});
+
+// Update a restaurant (admin only)
+app.put("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, menu_url } = req.body;
+    const sql = "UPDATE restaurants SET name = ?, menu_url = ? WHERE id = ?";
+    await query(sql, [name, menu_url, id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update restaurant" });
+  }
+});
+
+// Delete a restaurant (admin only)
+app.delete("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sql = "DELETE FROM restaurants WHERE id = ?";
+    await query(sql, [id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete restaurant" });
+  }
+});
+
+// Delete a menu item (admin only)
+app.delete("/api/menus/:id", verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sql = "DELETE FROM menu_items WHERE id = ?";
+    await query(sql, [id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete menu" });
   }
 });
 
