@@ -1,6 +1,6 @@
 // curl -X POST http://localhost:3001/api/menus/refresh
 export const RESTAURANTS = [
-  { name: "Campusravita", menuUrl: "https://www.campusravita.fi/ruokalistat/"},
+  { name: "Campusravita", menuUrl: "https://www.campusravita.fi/ruokalistat/", type: "juvenes" },
   { name: "Frenckell ja Piha", menuUrl: "https://www.juvenes.fi/frenckell/", type: "juvenes" },
   { name: "Arvo", menuUrl: "https://www.juvenes.fi/arvo/", type: "juvenes" },
   { name: "Sodexo Linna", menuUrl: "https://www.sodexo.fi/ravintolat/ravintola-linna", type: "sodexo" },
