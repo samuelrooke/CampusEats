@@ -74,23 +74,26 @@ export default function RestaurantPage() {
 
   if (loading) return <p>Loading menu...</p>;
   if (error) return <p>Error: {error}</p>;
-  if (menus.length === 0) return <p>No menu found for {decodedName}.</p>;
 
   return (
     <main className="app">
       <Link to="/" className="back-link">Back to restaurants</Link>
       <h1>{decodedName}</h1>
       
-      {Object.entries(groupByDate(menus)).map(([date, items]) => (
-        <article key={date} className="menu-card">
-          <h2 className="menu-title">{new Date(date).toLocaleDateString("fi-FI")}</h2>
-          <ul>
-            {items.map(item => (
-              <li key={item.id}>{item.title}</li>
-            ))}
-          </ul>
-        </article>
-      ))}
+      {menus.length > 0 ? (
+        Object.entries(groupByDate(menus)).map(([date, items]) => (
+          <article key={date} className="menu-card">
+            <h2 className="menu-title">{new Date(date).toLocaleDateString("fi-FI")}</h2>
+            <ul>
+              {items.map(item => (
+                <li key={item.id}>{item.title}</li>
+              ))}
+            </ul>
+          </article>
+        ))
+      ) : (
+        <p>No menu available for {decodedName} today.</p>
+      )}
 
       <section className="comments-section">
         <h2>Comments</h2>
