@@ -1,4 +1,3 @@
-// curl -X POST http://localhost:3001/api/menus/refresh
 export const RESTAURANTS = [
   { name: "Campusravita", menuUrl: "https://www.campusravita.fi/ruokalistat/", type: "juvenes" },
   { name: "Frenckell ja Piha", menuUrl: "https://www.juvenes.fi/frenckell/", type: "juvenes" },
@@ -15,24 +14,21 @@ export const RESTAURANTS = [
 import puppeteer from "puppeteer";
 
 async function scrapeJuvenes(restaurant) {
-  // start browser headless
   const browser = await puppeteer.launch({ headless: true });
   try {
     const page = await browser.newPage();
-
-    // open restaurant page
     await page.goto(restaurant.menuUrl, { waitUntil: "networkidle2" });
 
-    // grab jamix link from juvenes page
+    // extract jamix link from juvenes page
     const jamixLink = await page.evaluate(() => {
       const link = document.querySelector('a[href*="jamix.cloud"]');
       return link ? link.href : null;
     });
 
-    // open jamix and wait for content to show up
+    // navigate to jamix and wait for content
     if (jamixLink) {
       await page.goto(jamixLink, { waitUntil: "networkidle2" });
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       await page.waitForFunction(
         () => {
           const body = document.body;
@@ -40,70 +36,48 @@ async function scrapeJuvenes(restaurant) {
           const text = (body.innerText || body.textContent || "").trim();
           return text.length > 100;
         },
-        { timeout: 15000 } // timeout long because service is slow
+        { timeout: 8000 }
       ).catch(() => null);
     }
 
-    // read text and filter obvious junk rows
     const meals = await page.evaluate(() => {
-      const text = (document.body?.innerText || document.body?.textContent || "");
-
-      const nonMenuPhrases = [
-        "tälle päivälle ei löytynyt ruokalistaa.",
-        "select menu", "yksityiskohdat", "tietoja", "välttämätön", "mieltymykset", "tilastot", "markkinointi", "kielLÄ", "salli valinta", "salli kaikki", "mene sisältöön", "404 error", "hei kaveri!", "etsimäsi aarre ei löydy täältä...", "etusivulle", "juvenes oy", "juvenes juhla- ja kokouspalvelu", "juhla-", "kokous-", "saunatilat", "puh.", "yrityspalvelut", "juhlat ja tilaisuudet", "lounasravintolat", "opiskelijaravintolat", "ateriapalvelut", "tarjouspyyntö", "jätä palautetta", "yhteystiedot", "rekrytointi", "laskutusohje", "toimitusehdot", "käyttöehdot", "tietosuojaseloste", "juvenes oy 2025", "back to restaurants", "welcome to campuseats", "restaurants in tampere:", "opening hours:", "all menus", "tags: no tags"
+      const selectors = [
+        'li.menu-single-item',
+        '.menu-item-name'
       ];
 
-      const isNoise = (line) => {
-        const lower = line.toLowerCase();
-        if (
-          !lower ||
-          lower.includes("cookie") ||
-          lower.includes("eväste") ||
-          lower.includes("consent") ||
-          lower.includes("suostumus") ||
-          lower.includes("ravintola rata") ||
-          lower.includes("rajaa ruokavalio") ||
-          lower.includes("näytä viikko") ||
-          lower.includes("ruokavaliot") ||
-          lower.includes("suomienglishsvenska") ||
-          lower.includes("maanantai") ||
-          lower.includes("tiistai") ||
-          lower.includes("keskiviikko") ||
-          lower.includes("torstai") ||
-          lower.includes("perjantai") ||
-          lower.includes("lauantai") ||
-          lower.includes("sunnuntai") ||
-          lower === "leipäateria" ||
-          lower === "dessert" ||
-          lower.startsWith("cozy") ||
-          lower.startsWith("roots vegan") ||
-          lower.startsWith("g =") ||
-          lower.startsWith("l =") ||
-          lower.startsWith("m =") ||
-          lower.startsWith("mu =") ||
-          lower.startsWith("veg =") ||
-          lower.startsWith("* =") ||
-          lower.startsWith("sis.luomua =") ||
-          nonMenuPhrases.some(phrase => lower.includes(phrase))
-        ) {
-          return true;
-        }
-        return /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(lower);
-      };
+      let mealElements = [];
+      for (const selector of selectors) {
+        mealElements = Array.from(document.querySelectorAll(selector));
+        if (mealElements.length > 0) break;
+      }
 
-      return text
-        .split("\n")
-        .map((line) => line.trim().replace(/\s+/g, " "))
-        .filter((line) => line.length > 4 && line.length < 140 && !isNoise(line));
+      if (mealElements.length > 0) {
+        return mealElements.map(el => el.textContent.trim().replace(/\s+/g, " ")).filter(text => text.length > 3);
+      }
+      
+      // fallback for iss-style pages
+      const containers = Array.from(document.querySelectorAll('.menu_item_container'));
+      if (containers.length > 0) {
+        const issItems = containers.map(container => {
+          const nameSpans = Array.from(container.querySelectorAll('span.menu_item_name.combined'));
+          const names = nameSpans.map(span => span.textContent.trim()).filter(text => text);
+          return names.join(' ').replace(/,\s*$/, '').trim();
+        }).filter(text => text && text.length > 4 && text.length < 200);
+        
+        if (issItems.length > 0) {
+          return issItems;
+        }
+      }
+
+      return [];
     });
 
-    // drop duplicates
     const uniqueMeals = [...new Set(meals)];
 
     const date = new Date().toISOString().slice(0, 10);
     return uniqueMeals.map((title, i) => ({ id: i, title, date, source: restaurant.name }));
   } finally {
-    // close browser
     await browser.close();
   }
 }
@@ -113,7 +87,6 @@ async function scrapeSodexo(restaurant) {
   try {
     const page = await browser.newPage();
     await page.goto(restaurant.menuUrl, { waitUntil: "networkidle2" });
-
     // accept cookie
     try {
       await page.click('button#onetrust-accept-btn-handler');

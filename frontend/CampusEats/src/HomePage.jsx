@@ -36,14 +36,6 @@ function HomePage() {
       if (!response.ok) throw new Error("Failed to fetch menus");
 
       let data = await response.json();
-
-      if (Array.isArray(data) && data.length === 0) {
-        await fetch(`${API_BASE}/api/menus/refresh`, { method: "POST" });
-        response = await fetch(`${API_BASE}/api/menus`);
-        if (!response.ok) throw new Error("Failed to fetch menus");
-        data = await response.json();
-      }
-
       setMenus(data);
     } catch (err) {
       if (err instanceof TypeError) {
@@ -106,7 +98,13 @@ function HomePage() {
     );
   }
 
-  let menuContent = <p>No menus found.</p>;
+  let menuContent = (
+    <section className="no-menus-message">
+      <p>
+        No restaurants are open today. Check back on a weekday, or visit a restaurant page to see opening hours.
+      </p>
+    </section>
+  );
 
   if (filteredMenus.length > 0) {
     menuContent = (
