@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import cors from "cors";
-import cron from "node-cron"
+import cron from "node-cron";
 import { scrapeRestaurant, RESTAURANTS } from "./service/scraper.js";
 import { initDatabase } from "./database/init.js";
 import { query } from "./database/db.js";
@@ -21,31 +21,29 @@ app.use(express.json());
 app.use(cors());
 
 async function refreshMenus() {
+  console.log(`[refresh] Starting scrape for ${RESTAURANTS.length} restaurants.`);
   let totalSaved = 0;
+  
   for (const restaurant of RESTAURANTS) {
     try {
-      console.log("[refreshing] scraping " + restaurant.name + "...");
       const meals = await scrapeRestaurant(restaurant);
       if (meals.length > 0) {
         await saveMenus(meals, restaurant.name);
         totalSaved += meals.length;
-        console.log("[refresh] saved " + meals.length + " meals for " + restaurant.name);
-      } else {
-        console.warn("[refresh] no meals found for " + restaurant.name);
+        console.log(`[refresh] Saved ${meals.length} meals for ${restaurant.name}`);
       }
-    } catch (err) {
-      console.error("[refresh] error scraping " + restaurant.name + ":", err.message);
+    } catch (error) {
+      console.error(`[refresh] Error scraping ${restaurant.name}:`, error.message);
     }
   }
+
+  console.log(`[refresh] Finished. Total meals saved: ${totalSaved}`);
   return totalSaved;
 }
 
 async function getOrRefreshMenus() {
   const menus = await getAllMenus();
-  if (menus.length > 0) return menus;
-
-  await refreshMenus();
-  return await getAllMenus();
+  return menus;
 }
 
 function verifyAdminToken(req, res, next) {
