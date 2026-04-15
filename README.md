@@ -39,9 +39,9 @@ AI was used in scraper.js to identify the jamix endpoints, possible keywords for
 ## To Be Added (Will be changed as development continues)
 * [x] Interactive map with campus restaurant locations
 * [x] All student restaurants in the Tampere area
-- [ ] Admin login feature and functionality
+* [x] Admin login feature and functionality
 - [ ] Better UI and UX 
-- [ ] Some sort of anonymous chat between restaurants
+* [x] Some sort of anonymous chat between restaurants
 - [ ] Mobile 
 - [ ] Multi language
 - [ ] Docker deployement
