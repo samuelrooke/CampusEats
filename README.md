@@ -1,6 +1,5 @@
 
-# CampusEats rel2.0.0 beta
-
+# CampusEats rel3.0.0 RC
 ![campuseats](image-1.png)
 
 
