@@ -23,8 +23,8 @@ export default function RestaurantPage() {
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    async function fetch() {
+useEffect(() => {
+    async function loadData() {
       try {
         const [menusRes, commentsRes] = await Promise.all([
           fetch(`${API_BASE}/api/menus`),
@@ -45,7 +45,7 @@ export default function RestaurantPage() {
         setLoading(false);
       }
     }
-    fetch();
+    loadData();
   }, [decodedName]);
 
   async function handleSubmit(e) {
