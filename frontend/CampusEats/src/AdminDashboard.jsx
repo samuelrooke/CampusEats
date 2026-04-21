@@ -13,6 +13,8 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshResult, setRefreshResult] = useState(null);
 
   const token = localStorage.getItem("adminToken");
 
@@ -125,6 +127,24 @@ function AdminDashboard() {
       }
     } catch (err) {
       console.error("Error deleting menu:", err);
+    }
+  }
+
+  async function handleRefreshMenus() {
+    setRefreshing(true);
+    setRefreshResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/menus/refresh`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setRefreshResult(res.ok ? `Done - ${data.saved} items saved` : "Refresh failed");
+      if (res.ok) fetchData();
+    } catch {
+      setRefreshResult("Refresh failed");
+    } finally {
+      setRefreshing(false);
     }
   }
 
@@ -300,7 +320,13 @@ function AdminDashboard() {
         {/* Menus Tab */}
         {activeTab === "menus" && (
           <section className="admin-section">
-            <h2>All Menus</h2>
+            <div className="section-header">
+              <h2>All Menus</h2>
+              <button className="refresh-btn" onClick={handleRefreshMenus} disabled={refreshing}>
+                {refreshing ? "Refreshing..." : "Refresh Menus"}
+              </button>
+            </div>
+            {refreshResult && <p className="refresh-result">{refreshResult}</p>}
             {menus.length === 0 ? (
               <p className="empty">No menus</p>
             ) : (
