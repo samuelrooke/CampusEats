@@ -1,12 +1,16 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 import cron from "node-cron";
+import puppeteer from "puppeteer";
 import { scrapeRestaurant, RESTAURANTS } from "./service/scraper.js";
 import { initDatabase } from "./database/init.js";
 import { query } from "./database/db.js";
-import { saveMenus, getAllMenus } from "./service/menuService.js";
-import { getCommentsByRestaurant, addComment } from "./service/commentsService.js";
+import { saveMenus, getAllMenus, deleteMenu } from "./service/menuService.js";
+import { getCommentsByRestaurant, addComment, deleteComment, getAllComments } from "./service/commentsService.js";
+import { getAllRestaurants, updateRestaurant, deleteRestaurant } from "./service/restaurantService.js";
 
 /**
  * CampusEats backend - menu scraping & comment management API
@@ -20,32 +24,37 @@ const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(cors());
 
-/** Scrapes all restaurants and saves menus to DB */
+/** Scrapes all restaurants in parallel and saves menus to DB */
 async function refreshMenus() {
   console.log(`[refresh] Starting scrape for ${RESTAURANTS.length} restaurants.`);
-  let totalSaved = 0;
-  
-  for (const restaurant of RESTAURANTS) {
-    try {
-      const meals = await scrapeRestaurant(restaurant);
-      if (meals.length > 0) {
-        await saveMenus(meals, restaurant.name);
-        totalSaved += meals.length;
-        console.log(`[refresh] Saved ${meals.length} meals for ${restaurant.name}`);
-      }
-    } catch (error) {
-      console.error(`[refresh] Error scraping ${restaurant.name}:`, error.message);
-    }
+  const browser = await puppeteer.launch({ headless: true });
+
+  try {
+    const results = await Promise.allSettled(
+      RESTAURANTS.map(async (restaurant) => {
+        const meals = await scrapeRestaurant(restaurant, browser);
+        if (meals.length > 0) {
+          await saveMenus(meals, restaurant.name);
+          console.log(`[refresh] Saved ${meals.length} meals for ${restaurant.name}`);
+          return meals.length;
+        }
+        return 0;
+      })
+    );
+
+    const totalSaved = results
+      .filter(r => r.status === "fulfilled")
+      .reduce((sum, r) => sum + r.value, 0);
+
+    results
+      .filter(r => r.status === "rejected")
+      .forEach(r => console.error(`[refresh] Scrape failed:`, r.reason));
+
+    console.log(`[refresh] Finished. Total meals saved: ${totalSaved}`);
+    return totalSaved;
+  } finally {
+    await browser.close();
   }
-
-  console.log(`[refresh] Finished. Total meals saved: ${totalSaved}`);
-  return totalSaved;
-}
-
-/** Get all menus from DB */
-async function getOrRefreshMenus() {
-  const menus = await getAllMenus();
-  return menus;
 }
 
 /** Verify JWT token has admin claim */
@@ -69,9 +78,9 @@ function verifyAdminToken(req, res, next) {
 cron.schedule("0 */4 * * *", async () => {
   try {
     const saved = await refreshMenus();
-    console.log("Cron refresh done: " + saved + " items");
+    console.log(`[cron] Refresh done: ${saved} items saved`);
   } catch (error) {
-    console.error("Cron refresh failed", error);
+    console.error("[cron] Refresh failed:", error);
   }
 });
 
@@ -83,8 +92,7 @@ app.get("/api/health", (req, res) => {
 // Get all menus
 app.get("/api/menus", async (req, res) => {
   try {
-    const menus = await getOrRefreshMenus();
-    res.json(menus);
+    res.json(await getAllMenus());
   } catch (error) {
     res.status(500).json({ error: "Failed to load menus" });
   }
@@ -92,27 +100,21 @@ app.get("/api/menus", async (req, res) => {
 
 // Admin login - returns JWT token
 app.post("/api/login", async (req, res) => {
-  console.log("Login endpoint hit", req.body);
   const { username, password } = req.body;
-  if (
-    username === process.env.ADMIN_USER &&
-    password === process.env.ADMIN_PASS
-  ) {
+  if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
     const token = jwt.sign({ username, admin: true }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
     res.json({ token });
   } else {
     res.status(401).json({ error: "Invalid credentials" });
-  }  
-})
+  }
+});
 
 // Get comments by restaurant
 app.get("/api/comments/:restaurantId", async (req, res) => {
   try {
-    const restaurantId = req.params.restaurantId;
-    const comments = await getCommentsByRestaurant(restaurantId);
-    res.json(comments);
+    res.json(await getCommentsByRestaurant(req.params.restaurantId));
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch comments" });
   }
@@ -135,9 +137,7 @@ app.post("/api/comments", async (req, res) => {
 // Delete a comment (admin only)
 app.delete("/api/comments/:id", verifyAdminToken, async (req, res) => {
   try {
-    const { id } = req.params;
-    const sql = "DELETE FROM comments WHERE id = ?";
-    await query(sql, [id]);
+    await deleteComment(req.params.id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete comment" });
@@ -147,9 +147,7 @@ app.delete("/api/comments/:id", verifyAdminToken, async (req, res) => {
 // Get all comments (admin only)
 app.get("/api/admin/comments", verifyAdminToken, async (req, res) => {
   try {
-    const sql = "SELECT c.*, r.name as restaurantName FROM comments c LEFT JOIN restaurants r ON c.restaurantId = r.id ORDER BY c.timestamp DESC";
-    const comments = await query(sql);
-    res.json(comments);
+    res.json(await getAllComments());
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch comments" });
   }
@@ -158,9 +156,7 @@ app.get("/api/admin/comments", verifyAdminToken, async (req, res) => {
 // Get all restaurants (admin only)
 app.get("/api/admin/restaurants", verifyAdminToken, async (req, res) => {
   try {
-    const sql = "SELECT * FROM restaurants ORDER BY name";
-    const restaurants = await query(sql);
-    res.json(restaurants);
+    res.json(await getAllRestaurants());
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch restaurants" });
   }
@@ -169,10 +165,8 @@ app.get("/api/admin/restaurants", verifyAdminToken, async (req, res) => {
 // Update a restaurant (admin only)
 app.put("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
   try {
-    const { id } = req.params;
     const { name, menu_url } = req.body;
-    const sql = "UPDATE restaurants SET name = ?, menu_url = ? WHERE id = ?";
-    await query(sql, [name, menu_url, id]);
+    await updateRestaurant(req.params.id, name, menu_url);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: "Failed to update restaurant" });
@@ -182,9 +176,7 @@ app.put("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
 // Delete a restaurant (admin only)
 app.delete("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
   try {
-    const { id } = req.params;
-    const sql = "DELETE FROM restaurants WHERE id = ?";
-    await query(sql, [id]);
+    await deleteRestaurant(req.params.id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete restaurant" });
@@ -194,17 +186,15 @@ app.delete("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
 // Delete a menu item (admin only)
 app.delete("/api/menus/:id", verifyAdminToken, async (req, res) => {
   try {
-    const { id } = req.params;
-    const sql = "DELETE FROM menu_items WHERE id = ?";
-    await query(sql, [id]);
+    await deleteMenu(req.params.id);
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete menu" });
+    res.status(500).json({ error: "Failed to delete menu item" });
   }
 });
 
-// Manual refresh endpoint
-app.post("/api/menus/refresh", async (req, res) => {
+// Manual refresh (admin only)
+app.post("/api/menus/refresh", verifyAdminToken, async (req, res) => {
   try {
     const saved = await refreshMenus();
     res.json({ success: true, saved });
@@ -214,5 +204,5 @@ app.post("/api/menus/refresh", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("Backend running on port " + port);
+  console.log(`[server] Running on port ${port}`);
 });
