@@ -9,8 +9,8 @@ import { saveMenus, getAllMenus } from "./service/menuService.js";
 import { getCommentsByRestaurant, addComment } from "./service/commentsService.js";
 
 /**
- * @fileoverview CampusEats backend API server
- * @module backend/index
+ * CampusEats backend - menu scraping & comment management API
+ * Runs on port 3001. Auto-scrapes every 4 hours.
  */
 
 const app = express();
@@ -20,6 +20,7 @@ const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(cors());
 
+/** Scrapes all restaurants and saves menus to DB */
 async function refreshMenus() {
   console.log(`[refresh] Starting scrape for ${RESTAURANTS.length} restaurants.`);
   let totalSaved = 0;
@@ -41,11 +42,13 @@ async function refreshMenus() {
   return totalSaved;
 }
 
+/** Get all menus from DB */
 async function getOrRefreshMenus() {
   const menus = await getAllMenus();
   return menus;
 }
 
+/** Verify JWT token has admin claim */
 function verifyAdminToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -62,6 +65,7 @@ function verifyAdminToken(req, res, next) {
   }
 }
 
+// Auto-refresh menus every 4 hours
 cron.schedule("0 */4 * * *", async () => {
   try {
     const saved = await refreshMenus();
@@ -71,10 +75,12 @@ cron.schedule("0 */4 * * *", async () => {
   }
 });
 
+// Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// Get all menus
 app.get("/api/menus", async (req, res) => {
   try {
     const menus = await getOrRefreshMenus();
@@ -84,6 +90,7 @@ app.get("/api/menus", async (req, res) => {
   }
 });
 
+// Admin login - returns JWT token
 app.post("/api/login", async (req, res) => {
   console.log("Login endpoint hit", req.body);
   const { username, password } = req.body;
@@ -91,7 +98,7 @@ app.post("/api/login", async (req, res) => {
     username === process.env.ADMIN_USER &&
     password === process.env.ADMIN_PASS
   ) {
-    const token = jwt.sign({ username, admin: true }, process.env.JWT_SECRET, { //Json Web Token
+    const token = jwt.sign({ username, admin: true }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
     res.json({ token });
@@ -100,7 +107,7 @@ app.post("/api/login", async (req, res) => {
   }  
 })
 
-// Get comments for a restaurant
+// Get comments by restaurant
 app.get("/api/comments/:restaurantId", async (req, res) => {
   try {
     const restaurantId = req.params.restaurantId;
@@ -111,7 +118,7 @@ app.get("/api/comments/:restaurantId", async (req, res) => {
   }
 });
 
-// Add a new comment
+// Add comment
 app.post("/api/comments", async (req, res) => {
   try {
     const { restaurantId, text } = req.body;
@@ -196,6 +203,7 @@ app.delete("/api/menus/:id", verifyAdminToken, async (req, res) => {
   }
 });
 
+// Manual refresh endpoint
 app.post("/api/menus/refresh", async (req, res) => {
   try {
     const saved = await refreshMenus();
