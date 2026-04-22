@@ -134,12 +134,12 @@ function AdminDashboard() {
     setRefreshing(true);
     setRefreshResult("");
     try {
-      const res = await fetch(`${API_BASE}/api/scrape`, {
+      const res = await fetch(`${API_BASE}/api/menus/refresh`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setRefreshResult(res.ok ? `Done: ${data.message || "Menus refreshed"}` : `Error: ${data.error || "Failed"}`);
+      setRefreshResult(res.ok ? `Done - ${data.saved} items saved` : `Error: ${data.error || "Failed"}`);
       if (res.ok) fetchData();
     } catch {
       setRefreshResult("Error: Could not reach server");
