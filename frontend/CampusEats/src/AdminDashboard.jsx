@@ -13,6 +13,8 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshResult, setRefreshResult] = useState("");
 
   const token = localStorage.getItem("adminToken");
 
@@ -128,6 +130,24 @@ function AdminDashboard() {
     }
   }
 
+  async function handleRefreshMenus() {
+    setRefreshing(true);
+    setRefreshResult("");
+    try {
+      const res = await fetch(`${API_BASE}/api/scrape`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setRefreshResult(res.ok ? `Done: ${data.message || "Menus refreshed"}` : `Error: ${data.error || "Failed"}`);
+      if (res.ok) fetchData();
+    } catch {
+      setRefreshResult("Error: Could not reach server");
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   function handleLogout() {
     localStorage.removeItem("adminToken");
     navigate("/admin/login");
@@ -177,7 +197,7 @@ function AdminDashboard() {
                 {comments.map((comment) => (
                   <div key={comment.id} className="admin-row">
                     <div className="admin-cell">
-                      <strong>Restaurant:</strong> {comment.restaurantId}
+                      <strong>Restaurant:</strong> {comment.restaurantName}
                     </div>
                     <div className="admin-cell">
                       <p>{comment.text}</p>
@@ -300,7 +320,13 @@ function AdminDashboard() {
         {/* Menus Tab */}
         {activeTab === "menus" && (
           <section className="admin-section">
-            <h2>All Menus</h2>
+            <div className="section-header">
+              <h2>All Menus</h2>
+              <button className="refresh-btn" onClick={handleRefreshMenus} disabled={refreshing}>
+                {refreshing ? "Refreshing..." : "Refresh Menus"}
+              </button>
+            </div>
+            {refreshResult && <p className="refresh-result">{refreshResult}</p>}
             {menus.length === 0 ? (
               <p className="empty">No menus</p>
             ) : (
