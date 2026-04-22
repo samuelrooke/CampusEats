@@ -80,7 +80,7 @@ export default function RestaurantPage() {
 
   return (
     <main className="app">
-      <Link to="/" className="back-link">&#8592; All restaurants</Link>
+      <Link to="/" className="back-link">All restaurants</Link>
 
       <h1 className="restaurant-page-title">{decodedName}</h1>
       {hours && <p className="restaurant-page-hours">{hours}</p>}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
 
@@ -18,15 +18,7 @@ function AdminDashboard() {
 
   const token = localStorage.getItem("adminToken");
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/admin/login");
-      return;
-    }
-    fetchData();
-  }, [token, navigate]);
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch all comments
@@ -57,7 +49,15 @@ function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/admin/login");
+      return;
+    }
+    fetchData();
+  }, [token, navigate, fetchData]);
 
   async function deleteComment(id) {
     if (!confirm("Delete this comment?")) return;

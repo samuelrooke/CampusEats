@@ -1,7 +1,8 @@
 const PLACE = "Tampere";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import LeafletMap, { RESTAURANT_LOCATIONS } from "./LeafletMap";
+import LeafletMap from "./LeafletMap";
+import { RESTAURANT_LOCATIONS } from "./restaurantLocations";
 import "./App.css";
 
 function haversine([lat1, lon1], [lat2, lon2]) {
