@@ -101,8 +101,19 @@ app.get("/api/menus", async (req, res) => {
 // Admin login - returns JWT token
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
-  if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-    const token = jwt.sign({ username, admin: true }, process.env.JWT_SECRET, {
+  
+  // Input validation
+  if (!username || !password || typeof username !== "string" || typeof password !== "string") {
+    return res.status(400).json({ error: "Invalid credentials" });
+  }
+  
+  const trimmedUsername = username.trim();
+  if (trimmedUsername.length === 0 || password.length === 0) {
+    return res.status(400).json({ error: "Invalid credentials" });
+  }
+  
+  if (trimmedUsername === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
+    const token = jwt.sign({ username: trimmedUsername, admin: true }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
     res.json({ token });
