@@ -119,6 +119,17 @@ Starts backend (port 3001) and frontend (port 5173). Open [http://localhost:5173
 
 Developed as part of the Fullstack Development course (4A00HB49-3001).
 
+## AI use
+
+AI (Claude, Gemini, ChatGPT) was used in the following areas:
+
+- **Scraper**: identifying Jamix API endpoints, selectors for Sodexo/Compass/Pikante pages, and keyword filtering logic
+- **Bug fixing**: diagnosing the database driver mismatch (mysql to mysql2), column name mismatches in SQL queries, and timestamp type errors
+- **Styling**: parts of the CSS and Tailwind theme configuration
+- **Code clarification**: explaining and reviewing code during development
+
+Architecture and design decisions (database schema, API structure) were discussed with AI, but final decisions and implementation were done by me.
+
 ## Author
 
 [@samuelrooke](https://github.com/samuelrooke)
