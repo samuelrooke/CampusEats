@@ -43,9 +43,9 @@ const RESTAURANTS = [
 ];
 
 const TAG_PATTERNS = {
-  vegan:   /vegan|vegaani|kasvis|kasvispohjainen/i,
-  chicken: /kana|broileri|chicken/i,
-  meat:    /liha|nauta|porsas|sika|jauheliha|lammas|kinkku|pekoni|hirvi|poronliha|härkä/i,
+  vegan:   /\bvegan\b|\bvegaani\b|\bkasvis\b|\bkasvispohjainen\b/i,
+  chicken: /\bkana\b|\bbroileri\b|\bchicken\b/i,
+  meat:    /\bliha\b|\bnauta\b|\bporsas\b|\bsika\b|\bjauheliha\b|\blammas\b|\bkinkku\b|\bpekoni\b|\bhirvi\b|\bporonliha\b|\bhärkä\b/i,
 };
 
 function getFoodTags(menu) {
@@ -62,6 +62,31 @@ function HomePage() {
   const [activeTag, setActiveTag] = useState("");
   const [tagSearch, setTagSearch] = useState("");
   const [userLocation, setUserLocation] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [dishFavorites, setDishFavorites] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("favorites");
+    setFavorites(saved ? JSON.parse(saved) : []);
+    const savedDishes = localStorage.getItem("dishFavorites");
+    setDishFavorites(savedDishes ? JSON.parse(savedDishes) : []);
+  }, []);
+
+  function toggleFavorite(name) {
+    const updated = favorites.includes(name)
+      ? favorites.filter(f => f !== name)
+      : [...favorites, name];
+    setFavorites(updated);
+    localStorage.setItem("favorites", JSON.stringify(updated));
+  }
+
+  function toggleDishFavorite(dishId) {
+    const updated = dishFavorites.includes(dishId)
+      ? dishFavorites.filter(id => id !== dishId)
+      : [...dishFavorites, dishId];
+    setDishFavorites(updated);
+    localStorage.setItem("dishFavorites", JSON.stringify(updated));
+  }
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -154,8 +179,9 @@ function HomePage() {
             <div className="menu-grid">
               {filteredMenus.map((menu) => {
                 const tags = getFoodTags(menu);
+                const tagClass = tags.length > 0 ? ` menu-card--${tags[0]}` : '';
                 return (
-                  <article key={menu.id} className="menu-card">
+                  <article key={menu.id} className={`menu-card${tagClass}`}>
                     <p className="menu-card-restaurant">{menu.restaurant}</p>
                     <p className="menu-card-title">{menu.title}</p>
                     {tags.length > 0 && <p className="menu-card-tags">{tags.join(", ")}</p>}
@@ -169,22 +195,100 @@ function HomePage() {
         </section>
       ) : null}
 
+      {!isFiltering && dishFavorites.length > 0 && (
+        <section>
+          <p className="section-label">My Favorite Dishes</p>
+          <div className="menu-grid">
+            {menus
+              .filter((menu) => dishFavorites.includes(menu.id))
+              .map((menu) => {
+                const tags = getFoodTags(menu);
+                const tagClass = tags.length > 0 ? ` menu-card--${tags[0]}` : '';
+                return (
+                  <article key={menu.id} className={`menu-card${tagClass}`} style={{ position: "relative" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ flex: 1 }}>
+                        <p className="menu-card-restaurant">{menu.restaurant}</p>
+                        <p className="menu-card-title">{menu.title}</p>
+                        {tags.length > 0 && <p className="menu-card-tags">{tags.join(", ")}</p>}
+                      </div>
+                      <button
+                        className="favorite-btn favorite-btn--active"
+                        onClick={() => toggleDishFavorite(menu.id)}
+                        title="Remove from favorites"
+                        style={{ marginLeft: "0.5rem", flexShrink: 0 }}
+                      >
+                        ♥
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+          </div>
+        </section>
+      )}
+
+      {!isFiltering && favorites.length > 0 && (
+        <section>
+          <p className="section-label">My Favorites</p>
+          <div className="restaurant-list">
+            {RESTAURANTS.filter(name => favorites.includes(name)).map((name) => {
+              const distance = getDistance(name);
+              const hours = OPENING_TIMETABLES[name];
+              return (
+                <div key={name} className="restaurant-card">
+                  <div className="restaurant-info">
+                    <Link
+                      to={`/restaurant/${encodeURIComponent(name)}`}
+                      className="restaurant-name-link"
+                    >
+                      <p className="restaurant-name">{name}</p>
+                    </Link>
+                    {hours && <p className="restaurant-hours">{hours}</p>}
+                  </div>
+                  <div className="restaurant-actions">
+                    {distance && <p className="restaurant-distance">{distance}</p>}
+                    <button
+                      className="favorite-btn favorite-btn--active"
+                      onClick={() => toggleFavorite(name)}
+                      title="Remove from favorites"
+                    >
+                      ♥
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {!isFiltering && (
         <section>
           <p className="section-label">Restaurants in {PLACE}</p>
           <div className="restaurant-list">
             {RESTAURANTS.map((name) => (
-              <Link
-                key={name}
-                to={`/restaurant/${encodeURIComponent(name)}`}
-                className="restaurant-card"
-              >
-                <span className="restaurant-name">{name}</span>
-                <span className="restaurant-hours">
-                  {OPENING_TIMETABLES[name] || "Hours unavailable"}
-                  {getDistance(name) && <span className="restaurant-distance"> · {getDistance(name)}</span>}
-                </span>
-              </Link>
+              <div key={name} className="restaurant-card">
+                <div className="restaurant-info">
+                  <Link
+                    to={`/restaurant/${encodeURIComponent(name)}`}
+                    className="restaurant-name-link"
+                  >
+                    <p className="restaurant-name">{name}</p>
+                  </Link>
+                  {OPENING_TIMETABLES[name] && <p className="restaurant-hours">{OPENING_TIMETABLES[name]}</p>}
+                </div>
+                <div className="restaurant-actions">
+                  {getDistance(name) && <p className="restaurant-distance">{getDistance(name)}</p>}
+                  <button
+                    className={`favorite-btn${favorites.includes(name) ? " favorite-btn--active" : ""}`}
+                    onClick={() => toggleFavorite(name)}
+                    title={favorites.includes(name) ? "Remove from favorites" : "Add to favorites"}
+                  >
+                    ♥
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </section>

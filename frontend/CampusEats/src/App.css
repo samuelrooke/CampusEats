@@ -96,7 +96,7 @@
 
 .restaurant-card {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
   padding: 0.875rem 0.25rem;
@@ -106,12 +106,17 @@
   border-radius: 0;
 }
 
-.restaurant-card:hover {
-  background: none;
+.restaurant-info {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.restaurant-card:hover .restaurant-name {
-  color: var(--orange);
+.restaurant-name-link {
+  text-decoration: none;
+  flex: 1;
 }
 
 .restaurant-name {
@@ -119,6 +124,36 @@
   font-weight: 600;
   color: var(--ink);
   transition: color 0.15s;
+  margin: 0;
+}
+
+.restaurant-card:hover .restaurant-name {
+  color: var(--orange);
+}
+
+.restaurant-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.favorite-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--border);
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.15s;
+}
+
+.favorite-btn:hover {
+  color: #dc2626;
+}
+
+.favorite-btn--active {
+  color: #dc2626;
 }
 
 .restaurant-hours {
@@ -161,6 +196,36 @@
 .menu-card {
   background: var(--surface);
   padding: 0.875rem 1rem;
+  position: relative;
+}
+
+.menu-card--meat {
+  background-image: url('/meat.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.menu-card--chicken {
+  background-image: url('/chicken.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.menu-card--vegan {
+  background-image: url('/vegan.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.menu-card--meat::before,
+.menu-card--chicken::before,
+.menu-card--vegan::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.92);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .menu-card-restaurant {
@@ -170,18 +235,24 @@
   letter-spacing: 0.08em;
   color: var(--orange);
   margin-bottom: 0.25rem;
+  position: relative;
+  z-index: 1;
 }
 
 .menu-card-title {
   font-size: 0.9375rem;
   color: var(--ink);
   line-height: 1.4;
+  position: relative;
+  z-index: 1;
 }
 
 .menu-card-tags {
   margin-top: 0.25rem;
   font-size: 0.75rem;
   color: var(--ink-muted);
+  position: relative;
+  z-index: 1;
 }
 
 .menu-empty {

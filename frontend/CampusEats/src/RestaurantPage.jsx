@@ -27,6 +27,7 @@ export default function RestaurantPage() {
   const [error, setError]       = useState("");
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting]   = useState(false);
+  const [dishFavorites, setDishFavorites] = useState([]);
 
   useEffect(() => {
     async function loadData() {
@@ -50,6 +51,27 @@ export default function RestaurantPage() {
     }
     loadData();
   }, [decodedName]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("dishFavorites");
+    if (saved) {
+      try {
+        setDishFavorites(JSON.parse(saved));
+      } catch {
+        setDishFavorites([]);
+      }
+    }
+  }, []);
+
+  function toggleDishFavorite(dishId) {
+    setDishFavorites((prev) => {
+      const updated = prev.includes(dishId)
+        ? prev.filter((id) => id !== dishId)
+        : [...prev, dishId];
+      localStorage.setItem("dishFavorites", JSON.stringify(updated));
+      return updated;
+    });
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -91,7 +113,17 @@ export default function RestaurantPage() {
       {menus.length > 0 ? (
         <ul className="menu-list" style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {menus.map((item) => (
-            <li key={item.id} className="menu-list-item">{item.title}</li>
+            <li key={item.id} className="menu-list-item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingRight: "0.5rem" }}>
+              <span>{item.title}</span>
+              <button
+                className={`favorite-btn${dishFavorites.includes(item.id) ? " favorite-btn--active" : ""}`}
+                onClick={() => toggleDishFavorite(item.id)}
+                title={dishFavorites.includes(item.id) ? "Remove from favorites" : "Add to favorites"}
+                style={{ marginLeft: "0.5rem", flexShrink: 0 }}
+              >
+                ♥
+              </button>
+            </li>
           ))}
         </ul>
       ) : (
