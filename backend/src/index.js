@@ -122,6 +122,11 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+// Logout endpoint (clears token on client side - backend just acknowledges)
+app.post("/api/logout", verifyAdminToken, (req, res) => {
+  res.json({ success: true });
+});
+
 // Get comments by restaurant
 app.get("/api/comments/:restaurantId", async (req, res) => {
   try {
