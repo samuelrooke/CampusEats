@@ -1,7 +1,7 @@
 # CampusEats
 
-![campuseats](<img width="2844" height="933" alt="image" src="https://github.com/user-attachments/assets/825acf3d-77cd-4d6d-ac84-2a7146e63c28" />
-)
+<img width="2844" height="933" alt="image" src="https://github.com/user-attachments/assets/796ad429-e023-458e-8947-6335edeba5b2" />
+
 
 Web app for browsing daily lunch menus from campus restaurants in the Tampere area. Menus are scraped every 4 hours and users can leave comments on each restaurant.
 
