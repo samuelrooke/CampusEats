@@ -43,9 +43,9 @@ const RESTAURANTS = [
 ];
 
 const TAG_PATTERNS = {
-  vegan:   /vegan|vegaani|kasvis|kasvispohjainen/i,
-  chicken: /kana|broileri|chicken/i,
-  meat:    /liha|nauta|porsas|sika|jauheliha|lammas|kinkku|pekoni|hirvi|poronliha|härkä/i,
+  vegan:   /\bvegan\b|\bvegaani\b|\bkasvis\b|\bkasvispohjainen\b/i,
+  chicken: /\bkana\b|\bbroileri\b|\bchicken\b/i,
+  meat:    /\bliha\b|\bnauta\b|\bporsas\b|\bsika\b|\bjauheliha\b|\blammas\b|\bkinkku\b|\bpekoni\b|\bhirvi\b|\bporonliha\b|\bhärkä\b/i,
 };
 
 function getFoodTags(menu) {
@@ -62,6 +62,31 @@ function HomePage() {
   const [activeTag, setActiveTag] = useState("");
   const [tagSearch, setTagSearch] = useState("");
   const [userLocation, setUserLocation] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [dishFavorites, setDishFavorites] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("favorites");
+    setFavorites(saved ? JSON.parse(saved) : []);
+    const savedDishes = localStorage.getItem("dishFavorites");
+    setDishFavorites(savedDishes ? JSON.parse(savedDishes) : []);
+  }, []);
+
+  function toggleFavorite(name) {
+    const updated = favorites.includes(name)
+      ? favorites.filter(f => f !== name)
+      : [...favorites, name];
+    setFavorites(updated);
+    localStorage.setItem("favorites", JSON.stringify(updated));
+  }
+
+  function toggleDishFavorite(dishId) {
+    const updated = dishFavorites.includes(dishId)
+      ? dishFavorites.filter(id => id !== dishId)
+      : [...dishFavorites, dishId];
+    setDishFavorites(updated);
+    localStorage.setItem("dishFavorites", JSON.stringify(updated));
+  }
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -154,8 +179,9 @@ function HomePage() {
             <div className="menu-grid">
               {filteredMenus.map((menu) => {
                 const tags = getFoodTags(menu);
+                const tagClass = tags.length > 0 ? ` menu-card--${tags[0]}` : '';
                 return (
-                  <article key={menu.id} className="menu-card">
+                  <article key={menu.id} className={`menu-card${tagClass}`}>
                     <p className="menu-card-restaurant">{menu.restaurant}</p>
                     <p className="menu-card-title">{menu.title}</p>
                     {tags.length > 0 && <p className="menu-card-tags">{tags.join(", ")}</p>}
