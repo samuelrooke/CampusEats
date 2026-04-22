@@ -2,16 +2,16 @@
 
 ![campuseats](image-1.png)
 
-Web app for browsing daily lunch menus from campus restaurants in the Tampere area. Menus are scraped automatically every 4 hours and users can leave comments on each restaurant.
+Web app for browsing daily lunch menus from campus restaurants in the Tampere area. Menus are scraped every 4 hours and users can leave comments on each restaurant.
 
 ## Features
 
-- Daily menus scraped from 10 campus restaurants using Puppeteer
-- Restaurant pages with menu listing and user comments
+- Daily menus from 10 campus restaurants (Puppeteer scraper)
+- Restaurant pages with menus and comments
 - Interactive campus map with restaurant locations (Leaflet)
-- Opening hours displayed per restaurant
-- Admin dashboard — manage menus, restaurants, and comments, trigger manual scrape
-- JWT-based admin authentication
+- Opening hours per restaurant
+- Admin dashboard: manage menus, restaurants, and comments, trigger manual scrape
+- JWT admin authentication
 
 ## Tech stack
 
@@ -34,12 +34,7 @@ CampusEats/
 
 ## Setup
 
-### Prerequisites
-
-- Node.js 18+
-- MySQL server running locally
-
-### 1. Clone and install
+**Prerequisites:** Node.js 18+, MySQL
 
 ```bash
 git clone https://github.com/samuelrooke/CampusEats.git
@@ -48,9 +43,7 @@ npm install --prefix backend
 npm install --prefix frontend/CampusEats
 ```
 
-### 2. Configure environment variables
-
-Copy the example and fill in your values:
+Copy and fill in environment variables:
 
 ```bash
 cp backend/.env.example backend/.env
@@ -70,17 +63,13 @@ ADMIN_USER=admin
 ADMIN_PASS=your_admin_password
 ```
 
-The database tables are created automatically on first startup.
-
-### 3. Run
+Database tables are created automatically on first startup.
 
 ```bash
 npm start
 ```
 
-This starts both the backend (port 3001) and frontend (port 5173) concurrently.
-
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Starts backend (port 3001) and frontend (port 5173). Open [http://localhost:5173](http://localhost:5173).
 
 ## Supported restaurants
 
@@ -97,17 +86,15 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | Food&Co Minerva | Compass |
 | Food&Co Reaktori | Compass |
 
-Menus refresh automatically every 4 hours via cron, or manually from the admin dashboard.
-
 ## API routes
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
-| GET | `/api/health` | — | Health check |
-| GET | `/api/menus` | — | Today's menus |
-| GET | `/api/comments/:restaurantId` | — | Comments for a restaurant |
-| POST | `/api/comments` | — | Add a comment |
-| POST | `/api/login` | — | Admin login, returns JWT |
+| GET | `/api/health` | | Health check |
+| GET | `/api/menus` | | Today's menus |
+| GET | `/api/comments/:restaurantId` | | Comments for a restaurant |
+| POST | `/api/comments` | | Add a comment |
+| POST | `/api/login` | | Admin login, returns JWT |
 | GET | `/api/admin/comments` | admin | All comments |
 | DELETE | `/api/comments/:id` | admin | Delete a comment |
 | GET | `/api/admin/restaurants` | admin | All restaurants |
@@ -123,25 +110,14 @@ Menus refresh automatically every 4 hours via cron, or manually from the admin d
 - [x] User comments per restaurant
 - [x] Admin dashboard with CRUD and manual refresh
 - [x] JWT admin authentication
+- [x] Better UI/UX
 - [ ] Mobile layout
 - [ ] Multi-language support
 - [ ] Docker deployment
-- [x] Better UI/UX
 
 ## Course context
 
 Developed as part of the Fullstack Development course (4A00HB49-3001).
-
-## AI use
-
-AI (Claude, Gemini, Chatgpt study mode) was used in the following areas:
-
-- **Scraper**: identifying Jamix API endpoints, selectors for Sodexo/Compass/Pikante pages, and keyword filtering logic
-- **Bug fixing**: diagnosing and fixing the database driver mismatch (mysql to mysql2), column name mismatches in SQL queries, and timestamp type errors in the comments table
-- **Styling**: parts of the CSS and Tailwind theme configuration were generated with AI assistance
-- **Code clarification**: explaining and reviewing code during development
-
-AI was also consulted for ideas on architecture and design decisions, such as database schema and API structure. Final decisions and coding implementation were done by me.
 
 ## Author
 
