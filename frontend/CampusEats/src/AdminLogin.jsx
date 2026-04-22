@@ -118,13 +118,34 @@ export default function AdminLogin() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
+              disabled={loading || isLockedOut}
+              autoComplete="off"
             />
           </div>
 
-          <button type="submit" disabled={loading || !username || !password}>
+          <button type="submit" disabled={loading || !username || !password || isLockedOut}>
             {loading ? "Signing in..." : "Sign In"}
           </button>
+
+          {isLockedOut && (
+            <button
+              type="button"
+              onClick={clearAttempts}
+              className="reset-btn"
+              style={{
+                marginTop: "0.75rem",
+                fontSize: "0.75rem",
+                background: "#6b7280",
+                color: "#fff",
+                padding: "0.375rem 0.75rem",
+                border: "none",
+                borderRadius: "var(--radius)",
+                cursor: "pointer",
+              }}
+            >
+              Reset Lockout
+            </button>
+          )}
         </form>
       </div>
     </main>
