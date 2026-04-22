@@ -150,6 +150,7 @@ function AdminDashboard() {
 
   function handleLogout() {
     localStorage.removeItem("adminToken");
+    localStorage.setItem("loginAttempts", JSON.stringify({count: 0, timestamp: 0}));
     navigate("/admin/login");
   }
 
