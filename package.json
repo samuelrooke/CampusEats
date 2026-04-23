@@ -2,17 +2,13 @@
   "name": "campuseats",
   "version": "1.0.0",
   "private": true,
-  "main": "index.js",
+  "workspaces": ["backend", "frontend/CampusEats"],
   "scripts": {
-    "start": "concurrently \"npm --prefix backend start\" \"npm --prefix frontend/CampusEats run dev\"",
-    "dev": "concurrently \"npm --prefix backend start\" \"npm --prefix frontend/CampusEats run dev\""
+    "dev": "concurrently \"npm run start -w backend\" \"npm run dev -w frontend/CampusEats\"",
+    "start": "npm run start -w backend",
+    "build": "npm run build -w frontend/CampusEats"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
-  },
-  "dependencies": {
-    "leaflet": "^1.9.4",
-    "react-leaflet": "^5.0.0",
-    "react-router-dom": "^7.13.2"
   }
 }

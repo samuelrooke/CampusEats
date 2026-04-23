@@ -19,7 +19,6 @@ import { getAllRestaurants, updateRestaurant, deleteRestaurant } from "./service
 
 const app = express();
 
-await initDatabase();
 const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(cors());
@@ -219,6 +218,16 @@ app.post("/api/menus/refresh", verifyAdminToken, async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`[server] Running on port ${port}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  await initDatabase();
+  app.listen(port, () => {
+    console.log(`[server] Running on port ${port}`);
+  });
+  const existing = await getAllMenus();
+  if (existing.length === 0) {
+    console.log("[startup] No menus found, running initial scrape...");
+    refreshMenus().catch(err => console.error("[startup] Initial scrape failed:", err));
+  }
+}
+
+export default app;
