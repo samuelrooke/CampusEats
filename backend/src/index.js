@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 import cron from "node-cron";
@@ -26,7 +28,11 @@ app.use(cors());
 /** Scrapes all restaurants in parallel and saves menus to DB */
 async function refreshMenus() {
   console.log(`[refresh] Starting scrape for ${RESTAURANTS.length} restaurants.`);
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
   try {
     const results = await Promise.allSettled(
