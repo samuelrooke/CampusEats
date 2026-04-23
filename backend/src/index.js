@@ -224,6 +224,13 @@ app.post("/api/menus/refresh", verifyAdminToken, async (req, res) => {
   }
 });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+app.use(express.static(join(__dirname, "../public")));
+app.get("*", (req, res) => {
+  res.sendFile(join(__dirname, "../public", "index.html"));
+});
+
 if (process.env.NODE_ENV !== "test") {
   await initDatabase();
   app.listen(port, () => {
