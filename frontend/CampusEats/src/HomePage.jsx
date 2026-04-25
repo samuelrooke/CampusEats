@@ -14,7 +14,7 @@ function haversine([lat1, lon1], [lat2, lon2]) {
   return R * 2 * Math.asin(Math.sqrt(a));
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 const OPENING_TIMETABLES = {
   "Campusravita":      "Mon-Fri 10:30-16:00",
