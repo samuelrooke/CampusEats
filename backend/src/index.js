@@ -14,18 +14,12 @@ import { saveMenus, getAllMenus, deleteMenu } from "./service/menuService.js";
 import { getCommentsByRestaurant, addComment, deleteComment, getAllComments } from "./service/commentsService.js";
 import { getAllRestaurants, updateRestaurant, deleteRestaurant } from "./service/restaurantService.js";
 
-/**
- * CampusEats backend - menu scraping & comment management API
- * Runs on port 3001. Auto-scrapes every 4 hours.
- */
-
 const app = express();
 
 const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(cors());
 
-/** Scrapes all restaurants in parallel and saves menus to DB */
 async function refreshMenus() {
   console.log(`[refresh] Starting scrape for ${RESTAURANTS.length} restaurants.`);
   const browser = await puppeteer.launch({
@@ -62,7 +56,6 @@ async function refreshMenus() {
   }
 }
 
-/** Verify JWT token has admin claim */
 function verifyAdminToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -79,7 +72,6 @@ function verifyAdminToken(req, res, next) {
   }
 }
 
-// Auto-refresh menus every 4 hours
 cron.schedule("0 */4 * * *", async () => {
   try {
     const saved = await refreshMenus();
@@ -89,12 +81,10 @@ cron.schedule("0 */4 * * *", async () => {
   }
 });
 
-// Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Get all menus
 app.get("/api/menus", async (req, res) => {
   try {
     res.json(await getAllMenus());
@@ -103,20 +93,15 @@ app.get("/api/menus", async (req, res) => {
   }
 });
 
-// Admin login - returns JWT token
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
-  
-  // Input validation
   if (!username || !password || typeof username !== "string" || typeof password !== "string") {
     return res.status(400).json({ error: "Invalid credentials" });
   }
-  
   const trimmedUsername = username.trim();
   if (trimmedUsername.length === 0 || password.length === 0) {
     return res.status(400).json({ error: "Invalid credentials" });
   }
-  
   if (trimmedUsername === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
     const token = jwt.sign({ username: trimmedUsername, admin: true }, process.env.JWT_SECRET, {
       expiresIn: "1h",
@@ -127,12 +112,10 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Logout endpoint (clears token on client side - backend just acknowledges)
 app.post("/api/logout", verifyAdminToken, (req, res) => {
   res.json({ success: true });
 });
 
-// Get comments by restaurant
 app.get("/api/comments/:restaurantId", async (req, res) => {
   try {
     res.json(await getCommentsByRestaurant(req.params.restaurantId));
@@ -141,7 +124,6 @@ app.get("/api/comments/:restaurantId", async (req, res) => {
   }
 });
 
-// Add comment
 app.post("/api/comments", async (req, res) => {
   try {
     const { restaurantId, text } = req.body;
@@ -155,7 +137,6 @@ app.post("/api/comments", async (req, res) => {
   }
 });
 
-// Delete a comment (admin only)
 app.delete("/api/comments/:id", verifyAdminToken, async (req, res) => {
   try {
     await deleteComment(req.params.id);
@@ -165,7 +146,6 @@ app.delete("/api/comments/:id", verifyAdminToken, async (req, res) => {
   }
 });
 
-// Get all comments (admin only)
 app.get("/api/admin/comments", verifyAdminToken, async (req, res) => {
   try {
     res.json(await getAllComments());
@@ -174,7 +154,6 @@ app.get("/api/admin/comments", verifyAdminToken, async (req, res) => {
   }
 });
 
-// Get all restaurants (admin only)
 app.get("/api/admin/restaurants", verifyAdminToken, async (req, res) => {
   try {
     res.json(await getAllRestaurants());
@@ -183,7 +162,6 @@ app.get("/api/admin/restaurants", verifyAdminToken, async (req, res) => {
   }
 });
 
-// Update a restaurant (admin only)
 app.put("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
   try {
     const { name, menu_url } = req.body;
@@ -194,7 +172,6 @@ app.put("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
   }
 });
 
-// Delete a restaurant (admin only)
 app.delete("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
   try {
     await deleteRestaurant(req.params.id);
@@ -204,7 +181,6 @@ app.delete("/api/restaurants/:id", verifyAdminToken, async (req, res) => {
   }
 });
 
-// Delete a menu item (admin only)
 app.delete("/api/menus/:id", verifyAdminToken, async (req, res) => {
   try {
     await deleteMenu(req.params.id);
@@ -214,7 +190,6 @@ app.delete("/api/menus/:id", verifyAdminToken, async (req, res) => {
   }
 });
 
-// Manual refresh (admin only)
 app.post("/api/menus/refresh", verifyAdminToken, async (req, res) => {
   try {
     const saved = await refreshMenus();

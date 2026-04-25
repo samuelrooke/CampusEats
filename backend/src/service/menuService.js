@@ -1,6 +1,5 @@
 import { query } from '../database/db.js';
 
-/** Save meals for a restaurant, replacing today's menu */
 export async function saveMenus(menus, restaurantName) {
   let restaurant = await query('SELECT id FROM restaurants WHERE name = ?', [restaurantName]);
   if (restaurant.length === 0) {
@@ -15,7 +14,6 @@ export async function saveMenus(menus, restaurantName) {
   }
 }
 
-/** Get all menus for today */
 export async function getAllMenus() {
   return await query(`
     SELECT m.id, m.title, m.date, r.name as restaurant
@@ -26,7 +24,6 @@ export async function getAllMenus() {
   `);
 }
 
-/** Delete a single menu item by ID */
 export async function deleteMenu(id) {
   await query('DELETE FROM menu_items WHERE id = ?', [id]);
 }

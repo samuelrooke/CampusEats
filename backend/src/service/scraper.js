@@ -1,4 +1,3 @@
-/** Restaurant configs with name, URL, and scraper type. */
 export const RESTAURANTS = [
   { name: "Campusravita",     menuUrl: "https://www.campusravita.fi/",                                                                                          type: "juvenes" },
   { name: "Frenckell ja Piha",menuUrl: "https://www.juvenes.fi/frenckell/",                                                                                     type: "juvenes" },
@@ -12,44 +11,34 @@ export const RESTAURANTS = [
   { name: "Food&Co Reaktori", menuUrl: "https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/tampere/reaktori/",                             type: "compass" },
 ];
 
-/**
- * Call the Jamix menu API directly and return an array of meal name strings.
- * @param {number} restaurantId - Jamix restaurant ID
- * @param {string} name - Restaurant name used for logging
- * @returns {Promise<string[]|null>}
- */
 async function fetchJamixApi(restaurantId, name) {
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const url = `https://fi.jamix.cloud/apps/menuservice/rest/haku/menu/${restaurantId}/1?lang=fi&date=${today}&date2=${today}`;
   try {
     const res = await fetch(url);
     const json = await res.json();
-    const mealOptions = json[0]?.menuTypes?.[0]?.menus?.[0]?.days?.[0]?.mealOptions;
-    if (!mealOptions) return null;
-    return mealOptions.flatMap(o => o.menuItems?.map(i => i.name) ?? []);
+    const menuType = json[0]?.menuTypes?.[0];
+    const day = menuType?.menus?.[0]?.days?.[0];
+    if (!day?.mealOptions) return null;
+    const names = [];
+    for (const option of day.mealOptions) {
+      for (const item of option.menuItems ?? []) {
+        names.push(item.name);
+      }
+    }
+    return names;
   } catch (err) {
     console.log(`[${name}] Jamix API error: ${err.message}`);
     return null;
   }
 }
 
-/**
- * Format a string array into the standard menu item shape.
- * @param {string[]} meals
- * @param {string} restaurantName
- */
 function toMenuItems(meals, restaurantName) {
   const date = new Date().toISOString().slice(0, 10);
   return [...new Set(meals)].map((title, i) => ({ id: i, title, date, source: restaurantName }));
 }
 
-/**
- * Scrape Juvenes restaurants - uses Jamix API with DOM fallback.
- * @param {object} restaurant
- * @param {import('puppeteer').Browser} browser
- */
 async function scrapeJuvenes(restaurant, browser) {
-  // Campusravita has a hardcoded Jamix ID — skip the browser entirely
   if (restaurant.name === "Campusravita") {
     const meals = await fetchJamixApi(97603, restaurant.name);
     if (meals?.length) return toMenuItems(meals, restaurant.name);
@@ -58,7 +47,6 @@ async function scrapeJuvenes(restaurant, browser) {
   const page = await browser.newPage();
   try {
     await page.goto(restaurant.menuUrl, { waitUntil: "load", timeout: 60000 });
-
     try {
       await page.click('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll');
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -98,7 +86,6 @@ async function scrapeJuvenes(restaurant, browser) {
         }
       }
 
-      // Multiline button fallback (older Juvenes UI)
       const buttons = Array.from(document.querySelectorAll('.v-button-multiline'));
       if (buttons.length) {
         const names = buttons.flatMap(btn => {
@@ -111,7 +98,6 @@ async function scrapeJuvenes(restaurant, browser) {
         if (names.length) return [...new Set(names)];
       }
 
-      // ISS-style fallback
       const containers = Array.from(document.querySelectorAll('.menu_item_container'));
       if (containers.length) {
         return containers.map(c =>
@@ -133,11 +119,6 @@ async function scrapeJuvenes(restaurant, browser) {
   }
 }
 
-/**
- * Scrape Sodexo restaurants - tab-based interface with today's meals.
- * @param {object} restaurant
- * @param {import('puppeteer').Browser} browser
- */
 async function scrapeSodexo(restaurant, browser) {
   const page = await browser.newPage();
   try {
@@ -178,11 +159,6 @@ async function scrapeSodexo(restaurant, browser) {
   }
 }
 
-/**
- * Scrape Compass/Food&Co restaurants - consistent CSS selector approach.
- * @param {object} restaurant
- * @param {import('puppeteer').Browser} browser
- */
 async function scrapeCompass(restaurant, browser) {
   const page = await browser.newPage();
   try {
@@ -206,11 +182,6 @@ async function scrapeCompass(restaurant, browser) {
   }
 }
 
-/**
- * Scrape Pikante restaurants - first day section only, filters allergen codes.
- * @param {object} restaurant
- * @param {import('puppeteer').Browser} browser
- */
 async function scrapePikante(restaurant, browser) {
   const page = await browser.newPage();
   try {
@@ -224,7 +195,7 @@ async function scrapePikante(restaurant, browser) {
         .map(el => el.textContent.trim())
         .filter(text => {
           if (text.length < 3) return false;
-          if (text.includes('€') || text.includes('Ôé¼')) return false;
+          if (text.includes('€') || text.includes('Ôé¼')) return false; // Ôé¼ is a broken € from their website
           if (text.match(/^\*+(\s*\*+)*$/)) return false;
           if (text.match(/^[A-Z,\s]+$/) && text.length < 10) return false;
           if (text.match(/^\d+\./)) return false;
@@ -244,11 +215,6 @@ async function scrapePikante(restaurant, browser) {
   }
 }
 
-/**
- * Route a restaurant to the appropriate scraper using a shared Puppeteer browser.
- * @param {object} restaurant
- * @param {import('puppeteer').Browser} browser
- */
 export async function scrapeRestaurant(restaurant, browser) {
   switch (restaurant.type) {
     case "juvenes": return await scrapeJuvenes(restaurant, browser);

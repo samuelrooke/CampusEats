@@ -1,6 +1,5 @@
 import { query } from './db.js';
 
-/** Initialize database tables on startup */
 export async function initDatabase() {
   try {
     await query(`

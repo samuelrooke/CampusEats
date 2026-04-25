@@ -132,16 +132,6 @@ export default function AdminLogin() {
               type="button"
               onClick={clearAttempts}
               className="reset-btn"
-              style={{
-                marginTop: "0.75rem",
-                fontSize: "0.75rem",
-                background: "#6b7280",
-                color: "#fff",
-                padding: "0.375rem 0.75rem",
-                border: "none",
-                borderRadius: "var(--radius)",
-                cursor: "pointer",
-              }}
             >
               Reset Lockout
             </button>
