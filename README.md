@@ -1,12 +1,36 @@
 # CampusEats
 
-<img width="2844" height="933" alt="image" src="https://github.com/user-attachments/assets/796ad429-e023-458e-8947-6335edeba5b2" />
-
 Web app for browsing daily lunch menus from campus restaurants in the Tampere area. Menus are scraped every 4 hours and users can leave comments on each restaurant.
 
-## Features
+(RENDER LINK)
 
-- Daily menus from 10 campus restaurants (Puppeteer scraper)
+## Screenshots
+
+### Home page
+![Homepage](image-2.png)
+
+### Restaurant page menu and comments
+![Restaurant page](image-3.png)
+
+### Admin dashboard comments
+![Admin dashboard](image-4.png)
+
+### Admin dashboard menus
+![Menus](image-5.png)
+
+### Mobile view
+![Mobile](image-6.png)
+
+### Favorites
+![Favorites](image-7.png)
+
+### Search and tag filtering
+![Search bar](image-8.png)
+
+### Favorite dishes
+![Favorite dishes](image-9.png)
+
+- Daily menus from 10 campus restaurants (Puppeteer)
 - Restaurant pages with menus and comments
 - Interactive campus map with restaurant locations (Leaflet)
 - Favorite restaurants and dishes saved to localStorage
