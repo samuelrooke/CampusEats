@@ -46,7 +46,7 @@ async function scrapeJuvenes(restaurant, browser) {
 
   const page = await browser.newPage();
   try {
-    await page.goto(restaurant.menuUrl, { waitUntil: "load", timeout: 60000 });
+    await page.goto(restaurant.menuUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
     try {
       await page.click('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll');
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -122,7 +122,7 @@ async function scrapeJuvenes(restaurant, browser) {
 async function scrapeSodexo(restaurant, browser) {
   const page = await browser.newPage();
   try {
-    await page.goto(restaurant.menuUrl, { waitUntil: "load", timeout: 60000 });
+    await page.goto(restaurant.menuUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     try {
       await page.click('button#onetrust-accept-btn-handler');
@@ -162,7 +162,7 @@ async function scrapeSodexo(restaurant, browser) {
 async function scrapeCompass(restaurant, browser) {
   const page = await browser.newPage();
   try {
-    await page.goto(restaurant.menuUrl, { waitUntil: "load", timeout: 60000 });
+    await page.goto(restaurant.menuUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     try {
       await page.click('.coi-consent-banner__agree-button');
@@ -185,7 +185,7 @@ async function scrapeCompass(restaurant, browser) {
 async function scrapePikante(restaurant, browser) {
   const page = await browser.newPage();
   try {
-    await page.goto(restaurant.menuUrl, { waitUntil: "load", timeout: 60000 });
+    await page.goto(restaurant.menuUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     const meals = await page.evaluate(() => {
       const firstSection = document.querySelector('div.paiva');
