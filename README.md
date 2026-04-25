@@ -7,28 +7,28 @@ Web app for browsing daily lunch menus from campus restaurants in the Tampere ar
 ## Screenshots
 
 ### Home page
-![Homepage](image-2.png)
+![Homepage](images/image-2.png)
 
 ### Restaurant page menu and comments
-![Restaurant page](image-3.png)
+![Restaurant page](images/image-3.png)
 
 ### Admin dashboard comments
-![Admin dashboard](image-4.png)
+![Admin dashboard](images/image-4.png)
 
 ### Admin dashboard menus
-![Menus](image-5.png)
+![Menus](images/image-5.png)
 
 ### Mobile view
-![Mobile](image-6.png)
+![Mobile](images/image-6.png)
 
 ### Favorites
-![Favorites](image-7.png)
+![Favorites](images/image-7.png)
 
 ### Search and tag filtering
-![Search bar](image-8.png)
+![Search bar](images/image-8.png)
 
 ### Favorite dishes
-![Favorite dishes](image-9.png)
+![Favorite dishes](images/image-9.png)
 
 - Daily menus from 10 campus restaurants (Puppeteer)
 - Restaurant pages with menus and comments
