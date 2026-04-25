@@ -151,6 +151,7 @@ Used AI to add inline comments to code, making it easier to navigate and underst
 - **npm workspaces**: consulted when structuring the monorepo
 - **Styling**: used as a reference for CSS patterns and layout ideas
 - **Code clarification**: used to better understand libraries and concepts encountered during development
+- **Pull request summaries**: GitHub Copilot was used to generate PR descriptions
 
 Architecture and design decisions (database schema, API structure) were discussed with AI, but final decisions and implementation were done by me.
 
