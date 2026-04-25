@@ -21,7 +21,6 @@ function AdminDashboard() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch all comments
       const commentsRes = await fetch(`${API_BASE}/api/admin/comments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -29,7 +28,6 @@ function AdminDashboard() {
         setComments(await commentsRes.json());
       }
 
-      // Fetch all restaurants
       const restaurantsRes = await fetch(`${API_BASE}/api/admin/restaurants`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -37,7 +35,6 @@ function AdminDashboard() {
         setRestaurants(await restaurantsRes.json());
       }
 
-      // Fetch all menus
       const menusRes = await fetch(`${API_BASE}/api/menus`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -187,7 +184,6 @@ function AdminDashboard() {
       </div>
 
       <div className="admin-content">
-        {/* Comments Tab */}
         {activeTab === "comments" && (
           <section className="admin-section">
             <h2>All Comments</h2>
@@ -223,7 +219,6 @@ function AdminDashboard() {
           </section>
         )}
 
-        {/* Restaurants Tab */}
         {activeTab === "restaurants" && (
           <section className="admin-section">
             <h2>All Restaurants</h2>
@@ -318,7 +313,6 @@ function AdminDashboard() {
           </section>
         )}
 
-        {/* Menus Tab */}
         {activeTab === "menus" && (
           <section className="admin-section">
             <div className="section-header">

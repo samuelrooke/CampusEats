@@ -21,12 +21,12 @@ export default function RestaurantPage() {
   const { name } = useParams();
   const decodedName = decodeURIComponent(name);
 
-  const [menus, setMenus]       = useState([]);
+  const [menus, setMenus] = useState([]);
   const [comments, setComments] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [commentText, setCommentText] = useState("");
-  const [submitting, setSubmitting]   = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [dishFavorites, setDishFavorites] = useState([]);
 
   useEffect(() => {
@@ -95,8 +95,8 @@ export default function RestaurantPage() {
     }
   }
 
-  if (loading) return <main className="app"><p style={{ color: "var(--ink-muted)", fontSize: "0.875rem" }}>Loading...</p></main>;
-  if (error)   return <main className="app"><p style={{ color: "var(--ink-muted)", fontSize: "0.875rem" }}>{error}</p></main>;
+  if (loading) return <main className="app"><p className="status-text">Loading...</p></main>;
+  if (error)   return <main className="app"><p className="status-text">{error}</p></main>;
 
   const hours = OPENING_TIMETABLES[decodedName];
 
@@ -111,15 +111,14 @@ export default function RestaurantPage() {
         {menus.length > 0 ? "Today's menu" : "Menu"}
       </p>
       {menus.length > 0 ? (
-        <ul className="menu-list" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        <ul className="menu-list">
           {menus.map((item) => (
-            <li key={item.id} className="menu-list-item" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingRight: "0.5rem" }}>
+            <li key={item.id} className="menu-list-item">
               <span>{item.title}</span>
               <button
                 className={`favorite-btn${dishFavorites.includes(item.id) ? " favorite-btn--active" : ""}`}
                 onClick={() => toggleDishFavorite(item.id)}
                 title={dishFavorites.includes(item.id) ? "Remove from favorites" : "Add to favorites"}
-                style={{ marginLeft: "0.5rem", flexShrink: 0 }}
               >
                 ♥
               </button>
@@ -142,16 +141,14 @@ export default function RestaurantPage() {
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: "0.875rem", color: "var(--ink-muted)", marginBottom: "1.25rem" }}>
-            No comments yet.
-          </p>
+          <p className="no-comments">No comments yet.</p>
         )}
 
         <form onSubmit={handleSubmit} className="comment-form">
           <textarea
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Share your thoughts..."
+            placeholder="Add Comment..."
             rows="3"
             disabled={submitting}
           />

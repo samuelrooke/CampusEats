@@ -56,9 +56,9 @@ function getFoodTags(menu) {
 }
 
 function HomePage() {
-  const [menus, setMenus]         = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState("");
+  const [menus, setMenus] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [activeTag, setActiveTag] = useState("");
   const [tagSearch, setTagSearch] = useState("");
   const [userLocation, setUserLocation] = useState(null);
@@ -130,20 +130,20 @@ function HomePage() {
       })
     : [];
 
-  if (loading) return <main className="app"><p style={{ color: "var(--ink-muted)", fontSize: "0.875rem" }}>Loading menus...</p></main>;
+  if (loading) return <main className="app"><p className="status-text">Loading menus...</p></main>;
 
   if (error) {
     return (
       <main className="app">
-        <p style={{ color: "var(--ink-muted)", fontSize: "0.875rem", marginBottom: "0.75rem" }}>{error}</p>
-        <button onClick={fetchMenus} style={{ fontSize: "0.875rem", cursor: "pointer" }}>Retry</button>
+        <p className="status-text">{error}</p>
+        <button onClick={fetchMenus} className="retry-btn">Retry</button>
       </main>
     );
   }
 
   return (
     <main className="app">
-      <section style={{ marginBottom: "2rem" }}>
+      <section className="map-section">
         <LeafletMap userLocation={userLocation} />
       </section>
 
@@ -205,9 +205,9 @@ function HomePage() {
                 const tags = getFoodTags(menu);
                 const tagClass = tags.length > 0 ? ` menu-card--${tags[0]}` : '';
                 return (
-                  <article key={menu.id} className={`menu-card${tagClass}`} style={{ position: "relative" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ flex: 1 }}>
+                  <article key={menu.id} className={`menu-card${tagClass}`}>
+                    <div className="menu-card-with-favorite">
+                      <div className="menu-card-content">
                         <p className="menu-card-restaurant">{menu.restaurant}</p>
                         <p className="menu-card-title">{menu.title}</p>
                         {tags.length > 0 && <p className="menu-card-tags">{tags.join(", ")}</p>}
@@ -216,7 +216,6 @@ function HomePage() {
                         className="favorite-btn favorite-btn--active"
                         onClick={() => toggleDishFavorite(menu.id)}
                         title="Remove from favorites"
-                        style={{ marginLeft: "0.5rem", flexShrink: 0 }}
                       >
                         ♥
                       </button>
