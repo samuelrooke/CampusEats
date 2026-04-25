@@ -1,0 +1,75 @@
+.site-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e5e4;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 68px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  width: 160px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.hamburger-wrapper {
+  position: relative;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #1c1917;
+  border-radius: 2px;
+}
+
+.dropdown-nav {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 160px;
+  background: #fff;
+  border: 1px solid #e5e5e4;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-link {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #44403c;
+  text-decoration: none;
+  transition: background 0.1s;
+}
+
+.dropdown-link:hover { background: #f5f5f4; }
+.dropdown-link--active { color: #1c1917; font-weight: 600; }

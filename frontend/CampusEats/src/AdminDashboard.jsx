@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
 
@@ -13,21 +13,14 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshResult, setRefreshResult] = useState("");
 
   const token = localStorage.getItem("adminToken");
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/admin/login");
-      return;
-    }
-    fetchData();
-  }, [token, navigate]);
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch all comments
       const commentsRes = await fetch(`${API_BASE}/api/admin/comments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -35,7 +28,6 @@ function AdminDashboard() {
         setComments(await commentsRes.json());
       }
 
-      // Fetch all restaurants
       const restaurantsRes = await fetch(`${API_BASE}/api/admin/restaurants`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -43,7 +35,6 @@ function AdminDashboard() {
         setRestaurants(await restaurantsRes.json());
       }
 
-      // Fetch all menus
       const menusRes = await fetch(`${API_BASE}/api/menus`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -55,7 +46,15 @@ function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/admin/login");
+      return;
+    }
+    fetchData();
+  }, [token, navigate, fetchData]);
 
   async function deleteComment(id) {
     if (!confirm("Delete this comment?")) return;
@@ -128,8 +127,27 @@ function AdminDashboard() {
     }
   }
 
+  async function handleRefreshMenus() {
+    setRefreshing(true);
+    setRefreshResult("");
+    try {
+      const res = await fetch(`${API_BASE}/api/menus/refresh`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setRefreshResult(res.ok ? `Done - ${data.saved} items saved` : `Error: ${data.error || "Failed"}`);
+      if (res.ok) fetchData();
+    } catch {
+      setRefreshResult("Error: Could not reach server");
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   function handleLogout() {
     localStorage.removeItem("adminToken");
+    localStorage.setItem("loginAttempts", JSON.stringify({count: 0, timestamp: 0}));
     navigate("/admin/login");
   }
 
@@ -166,7 +184,6 @@ function AdminDashboard() {
       </div>
 
       <div className="admin-content">
-        {/* Comments Tab */}
         {activeTab === "comments" && (
           <section className="admin-section">
             <h2>All Comments</h2>
@@ -177,7 +194,7 @@ function AdminDashboard() {
                 {comments.map((comment) => (
                   <div key={comment.id} className="admin-row">
                     <div className="admin-cell">
-                      <strong>Restaurant:</strong> {comment.restaurantId}
+                      <strong>Restaurant:</strong> {comment.restaurantName}
                     </div>
                     <div className="admin-cell">
                       <p>{comment.text}</p>
@@ -202,7 +219,6 @@ function AdminDashboard() {
           </section>
         )}
 
-        {/* Restaurants Tab */}
         {activeTab === "restaurants" && (
           <section className="admin-section">
             <h2>All Restaurants</h2>
@@ -297,10 +313,15 @@ function AdminDashboard() {
           </section>
         )}
 
-        {/* Menus Tab */}
         {activeTab === "menus" && (
           <section className="admin-section">
-            <h2>All Menus</h2>
+            <div className="section-header">
+              <h2>All Menus</h2>
+              <button className="refresh-btn" onClick={handleRefreshMenus} disabled={refreshing}>
+                {refreshing ? "Refreshing..." : "Refresh Menus"}
+              </button>
+            </div>
+            {refreshResult && <p className="refresh-result">{refreshResult}</p>}
             {menus.length === 0 ? (
               <p className="empty">No menus</p>
             ) : (

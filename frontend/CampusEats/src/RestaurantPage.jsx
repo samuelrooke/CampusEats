@@ -4,54 +4,78 @@ import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
-function groupByDate(items) {
-  return items.reduce((acc, item) => {
-    if (!acc[item.date]) acc[item.date] = [];
-    acc[item.date].push(item);
-    return acc;
-  }, {});
-}
+const OPENING_TIMETABLES = {
+  "Campusravita":      "Mon-Fri 10:30-16:00",
+  "Frenckell ja Piha": "Mon-Fri 10:30-15:00",
+  "Arvo":              "Mon-Fri 10:30-15:00",
+  "Sodexo Linna":      "Mon-Fri 10:30-15:00",
+  "Ravintola Rata":    "Mon-Fri 10:30-18:00, Sat 11:00-15:00",
+  "Finn Medi":         "Mon-Fri 10:30-15:00",
+  "Sodexo Hertsi":     "Mon-Fri 10:00-16:00",
+  "Tori Mediapolis":   "Mon-Fri 10:30-15:00",
+  "Food&Co Minerva":   "Mon-Fri 10:30-15:00",
+  "Food&Co Reaktori":  "Mon-Fri 10:30-15:00",
+};
 
 export default function RestaurantPage() {
   const { name } = useParams();
   const decodedName = decodeURIComponent(name);
-  
+
   const [menus, setMenus] = useState([]);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [dishFavorites, setDishFavorites] = useState([]);
 
   useEffect(() => {
-    async function fetch() {
+    async function loadData() {
       try {
         const [menusRes, commentsRes] = await Promise.all([
           fetch(`${API_BASE}/api/menus`),
           fetch(`${API_BASE}/api/comments/${encodeURIComponent(decodedName)}`),
         ]);
-        
+
         if (menusRes.ok) {
           const data = await menusRes.json();
-          setMenus(data.filter(m => m.restaurant === decodedName));
+          setMenus(data.filter((m) => m.restaurant === decodedName));
         }
-        
-        if (commentsRes.ok) {
-          setComments(await commentsRes.json());
-        }
+
+        if (commentsRes.ok) setComments(await commentsRes.json());
       } catch {
         setError("Failed to load data");
       } finally {
         setLoading(false);
       }
     }
-    fetch();
+    loadData();
   }, [decodedName]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("dishFavorites");
+    if (saved) {
+      try {
+        setDishFavorites(JSON.parse(saved));
+      } catch {
+        setDishFavorites([]);
+      }
+    }
+  }, []);
+
+  function toggleDishFavorite(dishId) {
+    setDishFavorites((prev) => {
+      const updated = prev.includes(dishId)
+        ? prev.filter((id) => id !== dishId)
+        : [...prev, dishId];
+      localStorage.setItem("dishFavorites", JSON.stringify(updated));
+      return updated;
+    });
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!commentText.trim()) return;
-    
     setSubmitting(true);
     try {
       const res = await fetch(`${API_BASE}/api/comments`, {
@@ -59,11 +83,10 @@ export default function RestaurantPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ restaurantId: decodedName, text: commentText }),
       });
-      
       if (res.ok) {
         setCommentText("");
-        const commentsRes = await fetch(`${API_BASE}/api/comments/${encodeURIComponent(decodedName)}`);
-        if (commentsRes.ok) setComments(await commentsRes.json());
+        const updated = await fetch(`${API_BASE}/api/comments/${encodeURIComponent(decodedName)}`);
+        if (updated.ok) setComments(await updated.json());
       }
     } catch (err) {
       console.error("Error submitting comment:", err);
@@ -72,34 +95,45 @@ export default function RestaurantPage() {
     }
   }
 
-  if (loading) return <p>Loading menu...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (loading) return <main className="app"><p className="status-text">Loading...</p></main>;
+  if (error)   return <main className="app"><p className="status-text">{error}</p></main>;
+
+  const hours = OPENING_TIMETABLES[decodedName];
 
   return (
     <main className="app">
-      <Link to="/" className="back-link">Back to restaurants</Link>
-      <h1>{decodedName}</h1>
-      
+      <Link to="/" className="back-link">All restaurants</Link>
+
+      <h1 className="restaurant-page-title">{decodedName}</h1>
+      {hours && <p className="restaurant-page-hours">{hours}</p>}
+
+      <p className="menu-section-label">
+        {menus.length > 0 ? "Today's menu" : "Menu"}
+      </p>
       {menus.length > 0 ? (
-        Object.entries(groupByDate(menus)).map(([date, items]) => (
-          <article key={date} className="menu-card">
-            <h2 className="menu-title">{new Date(date).toLocaleDateString("fi-FI")}</h2>
-            <ul>
-              {items.map(item => (
-                <li key={item.id}>{item.title}</li>
-              ))}
-            </ul>
-          </article>
-        ))
+        <ul className="menu-list">
+          {menus.map((item) => (
+            <li key={item.id} className="menu-list-item">
+              <span>{item.title}</span>
+              <button
+                className={`favorite-btn${dishFavorites.includes(item.id) ? " favorite-btn--active" : ""}`}
+                onClick={() => toggleDishFavorite(item.id)}
+                title={dishFavorites.includes(item.id) ? "Remove from favorites" : "Add to favorites"}
+              >
+                ♥
+              </button>
+            </li>
+          ))}
+        </ul>
       ) : (
-        <p>No menu available for {decodedName} today.</p>
+        <p className="menu-empty">No menu available today.</p>
       )}
 
       <section className="comments-section">
         <h2>Comments</h2>
         {comments.length > 0 ? (
           <div className="comments-list">
-            {comments.map(c => (
+            {comments.map((c) => (
               <div key={c.id} className="comment-card">
                 <p className="comment-text">{c.text}</p>
                 <p className="comment-date">{new Date(c.timestamp).toLocaleDateString("fi-FI")}</p>
@@ -107,19 +141,19 @@ export default function RestaurantPage() {
             ))}
           </div>
         ) : (
-          <p>No comments yet.</p>
+          <p className="no-comments">No comments yet.</p>
         )}
 
         <form onSubmit={handleSubmit} className="comment-form">
           <textarea
             value={commentText}
-            onChange={e => setCommentText(e.target.value)}
-            placeholder="Share your thoughts"
-            rows="4"
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Add Comment..."
+            rows="3"
             disabled={submitting}
           />
           <button type="submit" disabled={submitting || !commentText.trim()}>
-            {submitting ? "Posting..." : "Post Comment"}
+            {submitting ? "Posting..." : "Post comment"}
           </button>
         </form>
       </section>

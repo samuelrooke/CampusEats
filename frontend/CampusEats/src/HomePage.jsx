@@ -1,168 +1,297 @@
-const PLACE = "Tampere"; // TODO: Make PLACE change based on user location or selection
+const PLACE = "Tampere";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import LeafletMap from "./LeafletMap";
+import { RESTAURANT_LOCATIONS } from "./restaurantLocations";
 import "./App.css";
+
+function haversine([lat1, lon1], [lat2, lon2]) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
 const OPENING_TIMETABLES = {
-  "Campusravita": "Mon-Fri 10:30-16:00",
+  "Campusravita":      "Mon-Fri 10:30-16:00",
   "Frenckell ja Piha": "Mon-Fri 10:30-15:00",
-  "Arvo": "Mon-Fri 10:30-15:00",
-  "Sodexo Linna": "Mon-Fri 10:30-15:00",
-  "Ravintola Rata": "Mon-Fri 10:30-18:00, Sat 11:00-15:00",
-  "Finn Medi": "Mon-Fri 10:30-15:00",
-  "Sodexo Hertsi": "Mon-Fri 10:00-16:00",
-  "Tori": "Mon-Fri 10:30-15:00",
-  "Mediapolis": "Mon-Fri 10:30-15:00",
-  "Food&Co Minerva": "Mon-Fri 10:30-15:00",
-  "Food&Co Reaktori": "Mon-Fri 10:30-15:00",
+  "Arvo":              "Mon-Fri 10:30-15:00",
+  "Sodexo Linna":      "Mon-Fri 10:30-15:00",
+  "Ravintola Rata":    "Mon-Fri 10:30-18:00, Sat 11:00-15:00",
+  "Finn Medi":         "Mon-Fri 10:30-15:00",
+  "Sodexo Hertsi":     "Mon-Fri 10:00-16:00",
+  "Tori Mediapolis":   "Mon-Fri 10:30-15:00",
+  "Food&Co Minerva":   "Mon-Fri 10:30-15:00",
+  "Food&Co Reaktori":  "Mon-Fri 10:30-15:00",
 };
+
+const RESTAURANTS = [
+  "Campusravita",
+  "Frenckell ja Piha",
+  "Arvo",
+  "Sodexo Linna",
+  "Ravintola Rata",
+  "Finn Medi",
+  "Sodexo Hertsi",
+  "Tori Mediapolis",
+  "Food&Co Minerva",
+  "Food&Co Reaktori",
+];
+
+const TAG_PATTERNS = {
+  vegan:   /\bvegan\b|\bvegaani\b|\bkasvis\b|\bkasvispohjainen\b/i,
+  chicken: /\bkana\b|\bbroileri\b|\bchicken\b/i,
+  meat:    /\bliha\b|\bnauta\b|\bporsas\b|\bsika\b|\bjauheliha\b|\blammas\b|\bkinkku\b|\bpekoni\b|\bhirvi\b|\bporonliha\b|\bhärkä\b/i,
+};
+
+function getFoodTags(menu) {
+  const text = `${menu.title} ${Array.isArray(menu.tags) ? menu.tags.join(" ") : ""}`;
+  return Object.entries(TAG_PATTERNS)
+    .filter(([, re]) => re.test(text))
+    .map(([tag]) => tag);
+}
 
 function HomePage() {
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedRestaurant] = useState("");
+  const [activeTag, setActiveTag] = useState("");
   const [tagSearch, setTagSearch] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [dishFavorites, setDishFavorites] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("favorites");
+    setFavorites(saved ? JSON.parse(saved) : []);
+    const savedDishes = localStorage.getItem("dishFavorites");
+    setDishFavorites(savedDishes ? JSON.parse(savedDishes) : []);
+  }, []);
+
+  function toggleFavorite(name) {
+    const updated = favorites.includes(name)
+      ? favorites.filter(f => f !== name)
+      : [...favorites, name];
+    setFavorites(updated);
+    localStorage.setItem("favorites", JSON.stringify(updated));
+  }
+
+  function toggleDishFavorite(dishId) {
+    const updated = dishFavorites.includes(dishId)
+      ? dishFavorites.filter(id => id !== dishId)
+      : [...dishFavorites, dishId];
+    setDishFavorites(updated);
+    localStorage.setItem("dishFavorites", JSON.stringify(updated));
+  }
+
+  useEffect(() => {
+    navigator.geolocation?.getCurrentPosition(
+      ({ coords }) => setUserLocation([coords.latitude, coords.longitude]),
+      () => {}
+    );
+  }, []);
 
   async function fetchMenus() {
     setLoading(true);
     setError("");
-    // Menu fetching script (similar to locations.js)
     try {
-      let response = await fetch(`${API_BASE}/api/menus`);
-      if (!response.ok) throw new Error("Failed to fetch menus");
-
-      let data = await response.json();
-      setMenus(data);
-    } catch (err) {
-      if (err instanceof TypeError) {
-        setError(`Cannot connect to backend at ${API_BASE}`);
-      } else {
-        setError("Failed to fetch menus");
-      }
+      const res = await fetch(`${API_BASE}/api/menus`);
+      if (!res.ok) throw new Error("not ok");
+      setMenus(await res.json());
+    } catch {
+      setError(`Cannot connect to backend at ${API_BASE}`);
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    fetchMenus();
-  }, []);
+  useEffect(() => { fetchMenus(); }, []);
 
-  // Hardcoded restaurant list for reliable display
-  const restaurants = [
-    "Campusravita",
-    "Frenckell ja Piha",
-    "Arvo",
-    "Sodexo Linna",
-    "Ravintola Rata",
-    "Finn Medi",
-    "Sodexo Hertsi",
-    "Tori",
-    "Mediapolis",
-    "Food&Co Minerva",
-    "Food&Co Reaktori",
-  ];
-  const visibleMenus = selectedRestaurant
-    ? menus.filter((menu) => menu.restaurant === selectedRestaurant)
-    : menus;
-  const getFoodTags = (menu) => {
-    // text search
-    const text = `${menu.title} ${Array.isArray(menu.tags) ? menu.tags.join(" ") : ""}`.toLowerCase();
-    // match vegan keywords
-    const vegan = /\bveg\b|vegan|kasvis/.test(text);
-    // match chicken keywords
-    const chicken = /kana|broileri/.test(text);
-    // match meat keywords
-    const meat = /liha|nauta|porsas|jauheliha|lammas|kinkku|pekoni/.test(text);
-    // return active tags
-    return [vegan && "vegan", meat && "meat", chicken && "chicken"].filter(Boolean);
-  };
+  const coordsMap = Object.fromEntries(RESTAURANT_LOCATIONS.map(r => [r.name, r.coords]));
 
-  const normalizedTagSearch = tagSearch.trim().toLowerCase();
-  const filteredMenus = normalizedTagSearch
-    ? visibleMenus.filter((menu) => getFoodTags(menu).includes(normalizedTagSearch))
-    : visibleMenus;
+  function getDistance(name) {
+    if (!userLocation || !coordsMap[name]) return null;
+    const km = haversine(userLocation, coordsMap[name]);
+    return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+  }
 
-  if (loading) return <p>Loading menus...</p>;
+  const textQuery = tagSearch.trim().toLowerCase();
+  const isFiltering = activeTag || textQuery;
+  const filteredMenus = isFiltering
+    ? menus.filter((m) => {
+        const tags = getFoodTags(m);
+        const tagMatch = activeTag ? tags.includes(activeTag) : true;
+        const textMatch = textQuery ? m.title.toLowerCase().includes(textQuery) : true;
+        return tagMatch && textMatch;
+      })
+    : [];
+
+  if (loading) return <main className="app"><p className="status-text">Loading menus...</p></main>;
+
   if (error) {
     return (
       <main className="app">
-        <h1>CampusEats Menus</h1>
-        <p>Error: {error}</p>
-        <button onClick={fetchMenus}>Retry</button>
+        <p className="status-text">{error}</p>
+        <button onClick={fetchMenus} className="retry-btn">Retry</button>
       </main>
-    );
-  }
-
-  let menuContent = (
-    <section className="no-menus-message">
-      <p>
-        No restaurants are open today. Check back on a weekday, or visit a restaurant page to see opening hours.
-      </p>
-    </section>
-  );
-
-  if (filteredMenus.length > 0) {
-    menuContent = (
-      <section>
-        <h2 className="section-title">{selectedRestaurant ? `${selectedRestaurant} Menu` : "All Menus"}</h2>
-        <div className="menu-grid">
-          {filteredMenus.map((menu) => {
-            const foodTags = getFoodTags(menu);
-            return (
-              <article key={menu.id} className="menu-card">
-                <h2 className="menu-title">{menu.title}</h2>
-                <p><strong>Restaurant:</strong> {menu.restaurant}</p>
-                <p>
-                  <strong>Date:</strong> {new Date(menu.date).toLocaleDateString("fi-FI")}
-                </p>
-                <p><strong>Tags:</strong> {foodTags.length > 0 ? foodTags.join(", ") : "No tags"}</p>
-              </article>
-            );
-          })}
-        </div>
-      </section>
     );
   }
 
   return (
     <main className="app">
-      <section className="mb-8">
-        <LeafletMap />
+      <section className="map-section">
+        <LeafletMap userLocation={userLocation} />
       </section>
 
-      <section className="app-topbar">
-        <h1 className="text-center">Welcome to CampusEats</h1>
+      <div className="search-bar">
+        <div className="tag-buttons">
+          {["vegan", "meat", "chicken"].map((tag) => (
+            <button
+              key={tag}
+              className={`tag-btn${activeTag === tag ? " tag-btn--active" : ""}`}
+              onClick={() => setActiveTag(activeTag === tag ? "" : tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
         <input
           type="text"
           className="tag-search"
-          placeholder="Type vegan, meat or chicken"
+          placeholder="Search by name..."
           value={tagSearch}
-          onChange={(event) => setTagSearch(event.target.value)}
+          onChange={(e) => setTagSearch(e.target.value)}
         />
-      </section>
+      </div>
 
-      <section className="restaurant-section">
-        <h2 className="section-title">Restaurants in {PLACE}:</h2>
-        <div className="restaurant-list">
-          {restaurants.map((restaurant) => (
-            <article key={restaurant} className="restaurant-card">
-              <Link to={`/restaurant/${encodeURIComponent(restaurant)}`} className="restaurant-name-link">
-                <p className="restaurant-name">{restaurant}</p>
-              </Link>
-              <p className="text-gray-600 text-sm">
-                Opening hours: {OPENING_TIMETABLES[restaurant] || "Not available"}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
+      {isFiltering ? (
+        <section>
+          <p className="search-results-label">
+            {filteredMenus.length} result{filteredMenus.length !== 1 ? "s" : ""}
+            {activeTag ? ` tagged "${activeTag}"` : ""}
+            {tagSearch.trim() ? ` matching "${tagSearch.trim()}"` : ""}
+          </p>
+          {filteredMenus.length > 0 ? (
+            <div className="menu-grid">
+              {filteredMenus.map((menu) => {
+                const tags = getFoodTags(menu);
+                const tagClass = tags.length > 0 ? ` menu-card--${tags[0]}` : '';
+                return (
+                  <article key={menu.id} className={`menu-card${tagClass}`}>
+                    <p className="menu-card-restaurant">{menu.restaurant}</p>
+                    <p className="menu-card-title">{menu.title}</p>
+                    {tags.length > 0 && <p className="menu-card-tags">{tags.join(", ")}</p>}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="menu-empty">No matching menu items today.</p>
+          )}
+        </section>
+      ) : null}
 
-      {menuContent}
+      {!isFiltering && dishFavorites.length > 0 && (
+        <section>
+          <p className="section-label">My Favorite Dishes</p>
+          <div className="menu-grid">
+            {menus
+              .filter((menu) => dishFavorites.includes(menu.id))
+              .map((menu) => {
+                const tags = getFoodTags(menu);
+                const tagClass = tags.length > 0 ? ` menu-card--${tags[0]}` : '';
+                return (
+                  <article key={menu.id} className={`menu-card${tagClass}`}>
+                    <div className="menu-card-with-favorite">
+                      <div className="menu-card-content">
+                        <p className="menu-card-restaurant">{menu.restaurant}</p>
+                        <p className="menu-card-title">{menu.title}</p>
+                        {tags.length > 0 && <p className="menu-card-tags">{tags.join(", ")}</p>}
+                      </div>
+                      <button
+                        className="favorite-btn favorite-btn--active"
+                        onClick={() => toggleDishFavorite(menu.id)}
+                        title="Remove from favorites"
+                      >
+                        ♥
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+          </div>
+        </section>
+      )}
+
+      {!isFiltering && favorites.length > 0 && (
+        <section>
+          <p className="section-label">My Favorites</p>
+          <div className="restaurant-list">
+            {RESTAURANTS.filter(name => favorites.includes(name)).map((name) => {
+              const distance = getDistance(name);
+              const hours = OPENING_TIMETABLES[name];
+              return (
+                <div key={name} className="restaurant-card">
+                  <div className="restaurant-info">
+                    <Link
+                      to={`/restaurant/${encodeURIComponent(name)}`}
+                      className="restaurant-name-link"
+                    >
+                      <p className="restaurant-name">{name}</p>
+                    </Link>
+                    {hours && <p className="restaurant-hours">{hours}</p>}
+                  </div>
+                  <div className="restaurant-actions">
+                    {distance && <p className="restaurant-distance">{distance}</p>}
+                    <button
+                      className="favorite-btn favorite-btn--active"
+                      onClick={() => toggleFavorite(name)}
+                      title="Remove from favorites"
+                    >
+                      ♥
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {!isFiltering && (
+        <section>
+          <p className="section-label">Restaurants in {PLACE}</p>
+          <div className="restaurant-list">
+            {RESTAURANTS.map((name) => (
+              <div key={name} className="restaurant-card">
+                <div className="restaurant-info">
+                  <Link
+                    to={`/restaurant/${encodeURIComponent(name)}`}
+                    className="restaurant-name-link"
+                  >
+                    <p className="restaurant-name">{name}</p>
+                  </Link>
+                  {OPENING_TIMETABLES[name] && <p className="restaurant-hours">{OPENING_TIMETABLES[name]}</p>}
+                </div>
+                <div className="restaurant-actions">
+                  {getDistance(name) && <p className="restaurant-distance">{getDistance(name)}</p>}
+                  <button
+                    className={`favorite-btn${favorites.includes(name) ? " favorite-btn--active" : ""}`}
+                    onClick={() => toggleFavorite(name)}
+                    title={favorites.includes(name) ? "Remove from favorites" : "Add to favorites"}
+                  >
+                    ♥
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
