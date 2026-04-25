@@ -103,7 +103,7 @@ function HomePage() {
       if (!res.ok) throw new Error("not ok");
       setMenus(await res.json());
     } catch {
-      setError(`Cannot connect to backend at ${API_BASE}`);
+      setError("Cannot connect to backend");
     } finally {
       setLoading(false);
     }
