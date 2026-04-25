@@ -136,7 +136,7 @@ function AdminDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setRefreshResult(res.ok ? `Done - ${data.saved} items saved` : `Error: ${data.error || "Failed"}`);
+      setRefreshResult(res.ok ? "Refresh started — check back in a few minutes" : `Error: ${data.error || "Failed"}`);
       if (res.ok) fetchData();
     } catch {
       setRefreshResult("Error: Could not reach server");

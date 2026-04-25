@@ -25,30 +25,23 @@ async function refreshMenus() {
   const browser = await puppeteer.launch({
     headless: true,
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   });
 
+  let totalSaved = 0;
   try {
-    const results = await Promise.allSettled(
-      RESTAURANTS.map(async (restaurant) => {
+    for (const restaurant of RESTAURANTS) {
+      try {
         const meals = await scrapeRestaurant(restaurant, browser);
         if (meals.length > 0) {
           await saveMenus(meals, restaurant.name);
           console.log(`[refresh] Saved ${meals.length} meals for ${restaurant.name}`);
-          return meals.length;
+          totalSaved += meals.length;
         }
-        return 0;
-      })
-    );
-
-    const totalSaved = results
-      .filter(r => r.status === "fulfilled")
-      .reduce((sum, r) => sum + r.value, 0);
-
-    results
-      .filter(r => r.status === "rejected")
-      .forEach(r => console.error(`[refresh] Scrape failed:`, r.reason));
-
+      } catch (err) {
+        console.error(`[refresh] Scrape failed for ${restaurant.name}:`, err.message);
+      }
+    }
     console.log(`[refresh] Finished. Total meals saved: ${totalSaved}`);
     return totalSaved;
   } finally {
@@ -190,13 +183,9 @@ app.delete("/api/menus/:id", verifyAdminToken, async (req, res) => {
   }
 });
 
-app.post("/api/menus/refresh", verifyAdminToken, async (req, res) => {
-  try {
-    const saved = await refreshMenus();
-    res.json({ success: true, saved });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to refresh menus" });
-  }
+app.post("/api/menus/refresh", verifyAdminToken, (req, res) => {
+  res.json({ success: true, saved: 0, message: "Refresh started" });
+  refreshMenus().catch(err => console.error("[refresh] Failed:", err.message));
 });
 
 const __filename = fileURLToPath(import.meta.url);
