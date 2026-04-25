@@ -1,12 +1,10 @@
 import { query } from '../database/db.js';
 
-/** Look up restaurant ID by name */
 async function getRestaurantIdByName(restaurantName) {
   const results = await query('SELECT id FROM restaurants WHERE name = ?', [restaurantName]);
   return results.length > 0 ? results[0].id : null;
 }
 
-/** Get all comments for a restaurant (by name or ID) */
 export async function getCommentsByRestaurant(restaurantIdentifier) {
   let restaurantId = restaurantIdentifier;
   if (typeof restaurantIdentifier === 'string' && isNaN(restaurantIdentifier)) {
@@ -16,7 +14,6 @@ export async function getCommentsByRestaurant(restaurantIdentifier) {
   return query('SELECT * FROM comments WHERE restaurantId = ? ORDER BY timestamp DESC', [restaurantId]);
 }
 
-/** Add a new comment to a restaurant */
 export async function addComment({ restaurantId, text }) {
   let finalRestaurantId = restaurantId;
   if (typeof restaurantId === 'string' && isNaN(restaurantId)) {
@@ -26,12 +23,10 @@ export async function addComment({ restaurantId, text }) {
   await query('INSERT INTO comments (restaurantId, text, timestamp) VALUES (?, ?, ?)', [finalRestaurantId, text, Date.now()]);
 }
 
-/** Delete a comment by ID */
 export async function deleteComment(id) {
   await query('DELETE FROM comments WHERE id = ?', [id]);
 }
 
-/** Get all comments across all restaurants (admin) */
 export async function getAllComments() {
   return query(`
     SELECT c.*, r.name as restaurantName
