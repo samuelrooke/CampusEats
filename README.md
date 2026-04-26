@@ -61,16 +61,6 @@ CampusEats/
     └── src/                # React components and styles
 ```
 
-## Running with Docker
-
-```bash
-cp backend/.env.example .env
-# fill in .env values
-docker compose up --build
-```
-
-Open http://localhost:3001. The backend serves the built frontend, no separate frontend server needed.
-
 ## Local development setup
 
 **Prerequisites:** Node.js 20+, MySQL
