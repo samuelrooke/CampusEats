@@ -3,6 +3,7 @@
 Web app for browsing daily university lunch menus from the Tampere area. Menus are scraped every 4 hours and users can leave comments on each restaurant.
 
 Live: https://campuseats-a2ww.onrender.com
+Screencast: https://youtu.be/IgZ6iAv06ag
 
 ## Screenshots
 
