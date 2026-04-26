@@ -150,7 +150,7 @@ AI (Claude, Gemini, ChatGPT Research, Learn, Study Mode) was used in the followi
 - **Bug fixing**: used as a debugging aid for environment-specific issues that were difficult to reproduce locally
 - **Docker**: consulted when learning how to containerise a Node.js app with Puppeteer and set up a multi-container environment
 - **Testing**: asked how to implement test environments from earlier assignments to this project, used AI to add inline comments to code making it easier to navigate during development
-- **Styling**: used as a reference for CSS patterns and layout ideas
+- **Styling**: used as a reference for CSS patterns and layout ideas eg. asking what is usually used for menus, are they grids or how to design frontpage or restaurant page
 - **Code clarification**: used to better understand libraries and concepts encountered during development
 - **Pull request summaries**: GitHub Copilot was used to generate PR descriptions
 
