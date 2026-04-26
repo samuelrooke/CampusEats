@@ -9,10 +9,10 @@ Live: https://campuseats-a2ww.onrender.com
 ### Home page
 ![Homepage](images/image-2.png)
 
-### Restaurant page menu and comments
+### Restaurant page
 ![Restaurant page](images/image-3.png)
 
-### Admin dashboard comments
+### Admin dashboard
 ![Admin dashboard](images/image-4.png)
 
 ### Admin dashboard menus
@@ -32,13 +32,14 @@ Live: https://campuseats-a2ww.onrender.com
 
 ## Features
 
-- Daily menus from 10 campus restaurants (not all Tampere Restaurants) (Puppeteer)
+- Daily menus from 10 campus restaurants scraped with Puppeteer
 - Restaurant pages with menus and comments
 - Interactive campus map with restaurant locations (Leaflet)
 - Favorite restaurants and dishes saved to localStorage
 - Opening hours per restaurant
-- Admin dashboard: manage menus, restaurants, and comments, trigger manual scrape
-- JWT admin authentication with client-side rate limiting
+- Food tag filtering and text search
+- Admin dashboard with CRUD and manual scrape trigger
+- JWT admin authentication
 
 ## Tech stack
 
@@ -61,7 +62,7 @@ CampusEats/
     └── src/                # React components and styles
 ```
 
-## Local development setup
+## Local development
 
 **Prerequisites:** Node.js 20+, MySQL
 
@@ -69,15 +70,10 @@ CampusEats/
 git clone https://github.com/samuelrooke/CampusEats.git
 cd CampusEats
 npm install
-```
-
-Copy and fill in environment variables:
-
-```bash
 cp backend/.env.example backend/.env
 ```
 
-`backend/.env`:
+Fill in `backend/.env`:
 
 ```
 DB_HOST=localhost
@@ -98,7 +94,7 @@ Database tables are created automatically on first startup.
 npm run dev
 ```
 
-Starts backend (port 3001) and frontend dev server (port 5173).
+Starts backend on port 3001 and frontend dev server on port 5173.
 
 ## Tests
 
@@ -106,20 +102,20 @@ Starts backend (port 3001) and frontend dev server (port 5173).
 npm test -w backend
 ```
 
-22 Jest + Supertest tests covering all 14 API routes. The database and Puppeteer are mocked so no running database is needed.
+22 Jest + Supertest tests covering all 14 API routes.
 
 ## Supported restaurants
 
-| Restaurant | Scraper type |
-|------------|-------------|
-| Campusravita | Juvenes / Jamix API |
-| Frenckell ja Piha | Juvenes / Jamix API |
-| Arvo | Juvenes / Jamix API |
+| Restaurant | Scraper |
+|------------|---------|
+| Campusravita | Jamix API |
+| Frenckell ja Piha | Jamix API |
+| Arvo | Jamix API |
 | Sodexo Linna | Sodexo |
-| Ravintola Rata | Juvenes / Jamix API |
+| Ravintola Rata | Jamix API |
 | Finn Medi | Pikante |
 | Sodexo Hertsi | Sodexo |
-| Tori Mediapolis | Juvenes / ISS |
+| Tori Mediapolis | ISS |
 | Food&Co Minerva | Compass |
 | Food&Co Reaktori | Compass |
 
@@ -141,17 +137,6 @@ npm test -w backend
 | DELETE | `/api/menus/:id` | admin | Delete a menu item |
 | POST | `/api/menus/refresh` | admin | Trigger manual scrape |
 
-## Roadmap
-
-- [x] Daily menu scraping (10 restaurants)
-- [x] Interactive campus map
-- [x] User comments per restaurant
-- [x] Admin dashboard with CRUD and manual refresh
-- [x] JWT admin authentication
-- [x] Favorites (restaurants and dishes)
-- [x] Mobile layout
-- [x] Docker deployment
-
 ## Course context
 
 Developed as part of the Fullstack Development course (4A00HB49-3001).
@@ -164,12 +149,11 @@ AI (Claude, Gemini, ChatGPT Research, Learn, Study Mode) was used in the followi
 - **Bug fixing**: used as a debugging aid for environment-specific issues that were difficult to reproduce locally
 - **Docker**: consulted when learning how to containerise a Node.js app with Puppeteer and set up a multi-container environment
 - **Testing**: asked how to implement test environments from earlier assignments to this project, used AI to add inline comments to code making it easier to navigate during development
-- **npm workspaces**: consulted when structuring the monorepo
 - **Styling**: used as a reference for CSS patterns and layout ideas
 - **Code clarification**: used to better understand libraries and concepts encountered during development
 - **Pull request summaries**: GitHub Copilot was used to generate PR descriptions
 
-Architecture and design decisions (database schema, API structure) were discussed with AI, but made by me
+Architecture and design decisions (database schema, API structure) were discussed with AI, implementation were done only by me.
 
 ## Author
 
