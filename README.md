@@ -1,8 +1,8 @@
 # CampusEats
 
-Web app for browsing daily lunch menus from campus restaurants in the Tampere area. Menus are scraped every 4 hours and users can leave comments on each restaurant.
+Web app for browsing daily university lunch menus from the Tampere area. Menus are scraped every 4 hours and users can leave comments on each restaurant.
 
-(RENDER LINK)
+Live: https://campuseats-a2ww.onrender.com
 
 ## Screenshots
 
@@ -30,7 +30,9 @@ Web app for browsing daily lunch menus from campus restaurants in the Tampere ar
 ### Favorite dishes
 ![Favorite dishes](images/image-9.png)
 
-- Daily menus from 10 campus restaurants (Puppeteer)
+## Features
+
+- Daily menus from 10 campus restaurants (not all Tampere Restaurants) (Puppeteer)
 - Restaurant pages with menus and comments
 - Interactive campus map with restaurant locations (Leaflet)
 - Favorite restaurants and dishes saved to localStorage
@@ -45,6 +47,7 @@ Web app for browsing daily lunch menus from campus restaurants in the Tampere ar
 | Frontend | React 19, Vite, react-router-dom, react-leaflet |
 | Backend | Node.js, Express, MySQL, Puppeteer, node-cron, jsonwebtoken |
 | Infra | Docker, Docker Compose, npm workspaces |
+| Hosting | Render (app), Railway (MySQL) |
 
 ## Project structure
 
@@ -66,7 +69,7 @@ cp backend/.env.example .env
 docker compose up --build
 ```
 
-Open [http://localhost:3001](http://localhost:3001). The backend serves the built frontend — no separate frontend server needed.
+Open http://localhost:3001. The backend serves the built frontend, no separate frontend server needed.
 
 ## Local development setup
 
@@ -170,14 +173,13 @@ AI (Claude, Gemini, ChatGPT Research, Learn, Study Mode) was used in the followi
 - **Scraper**: used as a reference when reverse-engineering undocumented restaurant APIs and figuring out site-specific HTML structures
 - **Bug fixing**: used as a debugging aid for environment-specific issues that were difficult to reproduce locally
 - **Docker**: consulted when learning how to containerise a Node.js app with Puppeteer and set up a multi-container environment
-- **Testing**: asked how to implement test environments from earlier assignments to this project,
-Used AI to add inline comments to code, making it easier to navigate and understand during development.
+- **Testing**: asked how to implement test environments from earlier assignments to this project, used AI to add inline comments to code making it easier to navigate during development
 - **npm workspaces**: consulted when structuring the monorepo
 - **Styling**: used as a reference for CSS patterns and layout ideas
 - **Code clarification**: used to better understand libraries and concepts encountered during development
 - **Pull request summaries**: GitHub Copilot was used to generate PR descriptions
 
-Architecture and design decisions (database schema, API structure) were discussed with AI, but final decisions and implementation were done by me.
+Architecture and design decisions (database schema, API structure) were discussed with AI, but made by me
 
 ## Author
 
